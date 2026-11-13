@@ -1,0 +1,205 @@
+.card {
+  display: grid;
+  gap: 0.35rem;
+  container-type: inline-size;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 300;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.subtitle {
+  font-family: var(--font-display);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--label);
+  text-align: center;
+}
+
+.passport {
+  position: relative;
+  aspect-ratio: 1 / 0.9;
+  margin-top: 0.5rem;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgb(43 63 128 / 0.35), transparent 70%),
+    linear-gradient(transparent 70%, rgb(124 156 255 / 0.05));
+}
+
+.lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+
+  & line {
+    stroke: rgb(124 156 255 / 0.55);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+.center {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  width: 34%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -38%);
+}
+
+.planet {
+  position: absolute;
+  inset: 9%;
+  border-radius: 50%;
+  box-shadow:
+    inset -14px -10px 26px rgb(0 0 0 / 0.75),
+    inset 4px 3px 10px rgb(255 255 255 / 0.12),
+    0 0 18px rgb(79 195 255 / 0.18);
+}
+
+.spin {
+  animation: spin 40s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: -200% 50%;
+  }
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+}
+
+.track {
+  fill: none;
+  stroke: rgb(124 156 255 / 0.2);
+  stroke-width: 2;
+}
+
+.progress {
+  fill: none;
+  stroke: #4fa8ff;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.badge {
+  position: absolute;
+  top: -2%;
+  left: -6%;
+  display: grid;
+  place-items: center;
+  width: 34%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background-color: rgb(43 100 160 / 0.85);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #fff;
+}
+
+.fields {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+}
+
+.field {
+  position: absolute;
+  top: var(--row);
+  width: 31%;
+  display: grid;
+  gap: 0.1rem;
+
+  &[data-side='left'] {
+    left: 0;
+    text-align: right;
+  }
+
+  &[data-side='right'] {
+    right: 0;
+  }
+
+  & dt {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: var(--label);
+  }
+
+  & dd {
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    color: var(--ice);
+    overflow-wrap: anywhere;
+  }
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* 좁으면 원 아래 두 열 목록으로 */
+@container (width < 19rem) {
+  .passport {
+    aspect-ratio: auto;
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 0.5rem;
+  }
+
+  .lines {
+    display: none;
+  }
+
+  .center {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 9rem;
+    margin: 0 auto;
+    transform: none;
+  }
+
+  .fields {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 0.75rem;
+  }
+
+  .field {
+    position: static;
+    width: auto;
+
+    &[data-side='left'] {
+      text-align: left;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}

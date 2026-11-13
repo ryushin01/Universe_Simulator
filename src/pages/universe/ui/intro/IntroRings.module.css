@@ -1,0 +1,59 @@
+.rings {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 35;
+  width: max(130vmin, 720px);
+  height: max(130vmin, 720px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: appear 1.4s ease-out both;
+}
+
+.ring {
+  transform-origin: 0 0;
+  animation-name: spin;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.ring:nth-child(even) {
+  animation-direction: reverse;
+}
+
+.orbit {
+  fill: none;
+  stroke: rgb(124 156 255 / 0.38);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.node {
+  fill: rgb(4 6 13 / 0.6);
+  stroke: rgb(169 189 255 / 0.85);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.dot {
+  fill: #c9d6ff;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .rings {
+    animation: none;
+  }
+}
