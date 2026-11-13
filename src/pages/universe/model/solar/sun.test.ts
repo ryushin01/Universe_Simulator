@@ -1,4 +1,11 @@
-import { blackbodyColor, stageAt, sunAgeGyr, sunAt, yearAtSunAge } from './sun'
+import {
+  blackbodyColor,
+  orbitClockYear,
+  stageAt,
+  sunAgeGyr,
+  sunAt,
+  yearAtSunAge,
+} from './sun'
 import {
   earthTemperature,
   habitability,
@@ -97,5 +104,22 @@ describe('기후', () => {
     expect(now.inner).toBeCloseTo(0.95, 2)
     expect(now.outer).toBeCloseTo(1.676, 2)
     expect(habitableZone(4).inner).toBeCloseTo(2 * now.inner, 6)
+  })
+
+  it('공전 시계: 질량이 1인 동안은 실제 연도, 질량을 잃으면 (M/M☉)²만큼 느리게 흐른다', () => {
+    // 오늘과 가까운 미래는 그대로 (행성 위치 검증 결과가 바뀌지 않음)
+    for (const year of [1900, 2026.5, 2061.57, 1e6])
+      expect(orbitClockYear(year)).toBe(year)
+    // 백색 왜성(질량 0.54): 공전 각속도가 0.54² ≈ 0.29배
+    const y = yearAtSunAge(15)
+    const rate = (orbitClockYear(y + 1e6) - orbitClockYear(y)) / 1e6
+    expect(rate).toBeCloseTo(0.54 ** 2, 6)
+    // 어디서나 앞으로만 흐름
+    let previous = orbitClockYear(yearAtSunAge(6))
+    for (let age = 6.1; age < 20; age += 0.37) {
+      const clock = orbitClockYear(yearAtSunAge(age))
+      expect(clock).toBeGreaterThan(previous)
+      previous = clock
+    }
   })
 })

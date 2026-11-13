@@ -21,7 +21,6 @@ import {
   separation,
 } from '../../../model/local/collision'
 import type { Collision } from '../../../model/local/collision'
-import { setCollisionInfo } from '../../../model/local/collisionInfo'
 import { makeBlob, makeSpiralGalaxy } from '../../../lib/galaxyModel'
 import { pointsVertex, starPointsFragment } from '../../../lib/shaders'
 import { cloudPoints } from '../galaxy/GalaxyScene'
@@ -222,7 +221,8 @@ export function createLocalScene(): ScaleScene {
       markers.get('andromeda')!.position.copy(centerOf(1))
       if (ctx.elapsed - lastInfo > 0.4) {
         lastInfo = ctx.elapsed
-        setCollisionInfo({
+        // 정보 카드는 메인 스레드에 있으므로 엔진을 거쳐 알림
+        ctx.reportCollision({
           separationLy: separation(collision) * 1000,
           merged: collision.merged,
           catchingUp: !caughtUp,

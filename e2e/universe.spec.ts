@@ -39,10 +39,11 @@ test.describe('첫 화면', () => {
       /Universe Simulator/i,
     )
     await expect(page.locator('html')).toHaveAttribute('lang', 'ko')
-    // 3D 장면은 첫 화면을 그린 뒤 유휴 시간에 만듦
+    // 3D는 렌더링 워커가 그림. 소프트웨어 WebGL(SwiftShader)은 컨텍스트를 만드는 데만
+    // 몇 초, 기계가 바쁘면 10초 넘게 걸리므로 넉넉히 기다림
     await expect(page.locator('canvas')).toBeVisible({ timeout: 20_000 })
     await expect(page.getByText('3D 우주를 준비하는 중')).toBeHidden({
-      timeout: 20_000,
+      timeout: 45_000,
     })
     // 소개 화면이 떠 있는 동안 main 랜드마크는 남기고 안의 영역은 inert
     const panels = page

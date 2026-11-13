@@ -15,11 +15,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     launchOptions: {
       // CI에는 GPU가 없으므로 소프트웨어 WebGL을 씀
-      args: [
-        '--use-angle=swiftshader',
-        '--enable-unsafe-swiftshader',
-        '--ignore-gpu-blocklist',
-      ],
+      // (--ignore-gpu-blocklist를 더하면 워커의 OffscreenCanvas WebGL이 크게 느려짐)
+      args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
     },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],

@@ -68,6 +68,42 @@ const TRACK: ReadonlyArray<readonly [number, number, number, number]> = [
   [12.367, whiteDwarfLuminosity(12.367), 0.0125, 0.54],
 ]
 
+/** 질량이 줄기 시작하기 전 마지막 표 나이 (이때까지 질량 1) */
+const FULL_MASS_AGE_GYR = 6.57
+
+/**
+ * FULL_MASS_AGE부터 나이 age까지 ∫ M(τ)² dτ (십억 년·M☉²).
+ * 질량은 표에서 선형 보간하므로 구간마다 (m₀² + m₀m₁ + m₁²)/3 × Δτ로 정확히 적분하고,
+ * 표가 끝난 뒤(백색 왜성)는 질량이 일정합니다.
+ */
+function massSquaredIntegral(ageGyr: number): number {
+  let total = 0
+  for (let i = 0; i < TRACK.length - 1; i++) {
+    const [a0, , , m0] = TRACK[i]
+    const [a1, , , m1] = TRACK[i + 1]
+    if (a1 <= FULL_MASS_AGE_GYR) continue
+    if (a0 >= ageGyr) return total
+    const end = Math.min(a1, ageGyr)
+    const m = m0 + ((m1 - m0) * (end - a0)) / (a1 - a0)
+    total += ((end - a0) * (m0 * m0 + m0 * m + m * m)) / 3
+  }
+  const [last, , , mLast] = TRACK[TRACK.length - 1]
+  if (ageGyr > last) total += (ageGyr - last) * mLast * mLast
+  return total
+}
+
+/**
+ * 공전 위상을 재는 시계 (소수 연도).
+ * 태양이 천천히 질량을 잃으면 궤도는 a ∝ 1/M로 넓어지고 각운동량이 보존되어
+ * 공전 각속도는 n ∝ M²로 느려집니다. 오늘 질량으로 공전한다고 보고 실제 시각 대신
+ * ∫(M/M☉)² dt만큼 흐르는 시계로 위상을 계산합니다. 질량이 1인 동안은 실제 연도와 같습니다.
+ */
+export function orbitClockYear(year: number): number {
+  const age = sunAgeGyr(year)
+  if (age <= FULL_MASS_AGE_GYR) return year
+  return yearAtSunAge(FULL_MASS_AGE_GYR) + massSquaredIntegral(age) * 1e9
+}
+
 /** 단계가 바뀌는 나이 (십억 년) */
 export const STAGE_AGES = {
   subgiant: 10.9,

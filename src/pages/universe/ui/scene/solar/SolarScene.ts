@@ -39,7 +39,7 @@ import {
   yearToJd,
 } from '@/shared/lib'
 import type { Vec3 } from '@/shared/lib'
-import { asset, prefersSmallTextures } from '@/shared/config'
+import { asset } from '@/shared/config'
 import { BODIES, BODY_IDS } from '../../../model/solar/bodies'
 import type { BodyId } from '../../../model/solar/bodies'
 import { bodyAxes, satelliteOffsetKm } from '../../../model/solar/ephemeris'
@@ -56,7 +56,7 @@ import {
   toScene,
 } from '../../../model/solar/scale'
 import type { DistanceMode } from '../../../model/solar/scale'
-import { blackbodyColor } from '../../../model/solar/sun'
+import { blackbodyColor, orbitClockYear } from '../../../model/solar/sun'
 import { IMPACTOR_KINDS } from '../../../model/hazards/impact'
 import { STORM_CLASSES } from '../../../model/hazards/storm'
 import {
@@ -118,11 +118,13 @@ import {
   raDecToScene,
   toVector,
 } from '../common'
-import type { FrameContext, ScaleScene, Target } from '../types'
+import type { FrameContext, ScaleScene, SceneEnv, Target } from '../types'
 
-const TEXTURES = prefersSmallTextures()
-  ? { earth: 'earth-albedo-1024', lights: 'earth-lights-1024' }
-  : { earth: 'earth-albedo', lights: 'earth-lights' }
+/** 지구 텍스처: 화면이 좁거나 메모리가 적은 기기는 1024px 벌 */
+const earthTextures = (env: SceneEnv) =>
+  env.smallTextures
+    ? { earth: 'earth-albedo-1024', lights: 'earth-lights-1024' }
+    : { earth: 'earth-albedo', lights: 'earth-lights' }
 
 /** 텍스처가 없는 천체의 잡음 표면 [색 A, 색 B, 크기, 능선, 점(경도·위도·반경), 점 색] */
 const PROCEDURAL: Partial<
@@ -321,7 +323,8 @@ function setLine(line: Line | LineLoop | LineSegments, points: Vector3[]) {
   line.geometry.setAttribute('position', new BufferAttribute(positions, 3))
 }
 
-export function createSolarScene(): ScaleScene {
+export function createSolarScene(env: SceneEnv): ScaleScene {
+  const TEXTURES = earthTextures(env)
   const scene = new Scene()
   const sky = makeSky({
     radius: 9000,
@@ -1559,7 +1562,8 @@ export function createSolarScene(): ScaleScene {
       updateOrbits(world, ctx.selected, ctx.options.orbits, ctx.elapsed)
 
       // 띠
-      const days = ((world.orbitYear - 2000) % 1000) * 365.25
+      // 질량을 잃은 태양 둘레에서는 행성처럼 띠의 공전도 느려짐 (공전 시계)
+      const days = ((orbitClockYear(world.orbitYear) - 2000) % 1000) * 365.25
       for (const belt of [asteroidBelt, kuiperBelt]) {
         const u = (belt.material as ShaderMaterial).uniforms
         u.uDays.value = days

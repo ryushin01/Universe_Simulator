@@ -1,11 +1,12 @@
-import { clamp, length, scale, yearToJd } from '@/shared/lib'
+import { clamp, jdToYear, length, scale, yearToJd } from '@/shared/lib'
 import type { Vec3 } from '@/shared/lib'
 import { BODIES, BODY_IDS } from '../solar/bodies'
 import type { BodyId } from '../solar/bodies'
 import { heliocentricElements, satelliteOffsetKm } from '../solar/ephemeris'
+import type { OrbitOverride } from '../solar/ephemeris'
 import { positionFromElements } from '../solar/kepler'
 import type { Elements } from '../solar/kepler'
-import { sunAgeGyr, sunAt } from '../solar/sun'
+import { orbitClockYear, sunAgeGyr, sunAt } from '../solar/sun'
 import type { SunState } from '../solar/sun'
 import {
   habitableZone,
@@ -114,11 +115,28 @@ export function expansion(state: WorldState, id: BodyId): number {
   return (override?.sunMass ?? 1) / sunState(state).mass
 }
 
+/**
+ * 공전 위상을 계산할 시각 (율리우스일). 태양이 질량을 잃으면 공전 각속도가 n ∝ M²로
+ * 느려지므로 실제 시각 대신 공전 시계(∫(M/M☉)² dt)로 잽니다.
+ * N체 계산 뒤의 궤도는 그때 질량 M₀ 기준이므로 (M/M₀)²만큼 흐름
+ */
+function orbitPhaseJd(year: number, override?: OrbitOverride): number {
+  if (!override) return yearToJd(orbitClockYear(year))
+  const epochYear = jdToYear(override.epochJd)
+  const elapsed =
+    (orbitClockYear(year) - orbitClockYear(epochYear)) / override.sunMass ** 2
+  return override.epochJd + elapsed * 365.25
+}
+
 /** 지금 태양 기준 궤도 요소 (질량 손실·궤도 이동 반영) */
 export function bodyElements(state: WorldState, id: BodyId): Elements | null {
   if (isRemoved(state, id)) return null
-  const jd = yearToJd(state.orbitYear)
-  const el = heliocentricElements(id, jd, state.overrides[id])
+  const override = state.overrides[id]
+  const el = heliocentricElements(
+    id,
+    orbitPhaseJd(state.orbitYear, override),
+    override,
+  )
   if (!el) return null
   const f = expansion(state, id)
   const shift = id === 'earth' ? state.earth.shiftAu : 0
