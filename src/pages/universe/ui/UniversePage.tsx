@@ -153,13 +153,10 @@ export function UniversePage() {
             <StatusBoard />
             <EventLog />
             <ScenarioShare />
-            <details class={styles.credits}>
-              <summary>{t('page.credits')}</summary>
-              <p>{t('page.creditsText')}</p>
-              <p>
-                <a href={REPOSITORY_URL}>{t('page.source')}</a>
-              </p>
-            </details>
+            {/* 외부 자료의 출처는 README에 밝히고, 화면에는 그곳으로 가는 링크만 둠 */}
+            <p class={styles.credits}>
+              <a href={`${REPOSITORY_URL}#출처`}>{t('page.credits')}</a>
+            </p>
           </section>
         </div>
       </main>

@@ -18,12 +18,10 @@ export const MESSAGES = {
   'page.language': ['언어', 'Language'],
   'page.mobileNav': ['화면 이동', 'Jump to'],
   'page.destinations': ['목적지', 'Destinations'],
-  'page.credits': ['자료 출처', 'Credits'],
-  'page.creditsText': [
-    '행성 텍스처: Solar System Scope (CC BY 4.0) · 지구 텍스처: three.js 예제 (MIT) · 궤도 요소: NASA JPL. 수치는 교육용 단순화 모델입니다.',
-    'Planet textures: Solar System Scope (CC BY 4.0) · Earth textures: three.js examples (MIT) · Orbital elements: NASA JPL. Figures come from simplified educational models.',
+  'page.credits': [
+    '텍스처·궤도 자료·글꼴 출처 (README)',
+    'Texture, orbital data and font credits (README)',
   ],
-  'page.source': ['소스 코드', 'Source code'],
   // 규모
   'scale.legend': ['보는 규모', 'Scale'],
   'scale.solar': ['태양계', 'Solar System'],
