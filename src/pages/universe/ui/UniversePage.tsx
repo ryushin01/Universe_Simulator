@@ -153,13 +153,17 @@ export function UniversePage() {
             <StatusBoard />
             <EventLog />
             <ScenarioShare />
-            <details class={styles.credits}>
-              <summary>{t('page.credits')}</summary>
-              <p>{t('page.creditsText')}</p>
-              <p>
-                <a href={REPOSITORY_URL}>{t('page.source')}</a>
-              </p>
-            </details>
+            {/* 외부 자료의 출처는 README에 밝히고, 화면에는 그곳으로 가는 링크만 둠 */}
+            <p class={styles.credits}>
+              {/* 저장하지 않은 시뮬레이션이 사라지지 않도록 새 탭으로 (글자로 미리 알림) */}
+              <a
+                href={`${REPOSITORY_URL}#출처`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('page.credits')}
+              </a>
+            </p>
           </section>
         </div>
       </main>
