@@ -111,7 +111,7 @@ vec3 surface() {
   vec3 c = mix(uColorA, uColorB, smoothstep(-0.45, 0.55, n));
   if (uSpot.w > 0.0) {
     float d = acos(clamp(dot(vLocal, normalize(uSpot.xyz)), -1.0, 1.0));
-    c = mix(c, uSpotColor, smoothstep(uSpot.w, uSpot.w * 0.55, d));
+    c = mix(c, uSpotColor, (1.0 - smoothstep(uSpot.w * 0.55, uSpot.w, d)));
   }
   return c;
 }
@@ -144,18 +144,18 @@ void main() {
     float r = mark.w;
     if (info.x < 1.5) {
       // 크레이터: 어두운 바닥과 밝은 테두리
-      float floorMask = smoothstep(r, r * 0.6, d);
-      float rim = smoothstep(r * 1.35, r, d) * (1.0 - floorMask);
+      float floorMask = (1.0 - smoothstep(r * 0.6, r, d));
+      float rim = (1.0 - smoothstep(r, r * 1.35, d)) * (1.0 - floorMask);
       albedo = mix(albedo, albedo * 0.45, floorMask * info.y);
       albedo = mix(albedo, albedo * 1.35 + 0.05, rim * info.y);
       emission += vec3(1.0, 0.45, 0.12) * floorMask * info.z;
     } else if (info.x < 2.5) {
       // 가스 행성 대기 흔적
-      float spot = smoothstep(r, r * 0.3, d);
+      float spot = (1.0 - smoothstep(r * 0.3, r, d));
       albedo = mix(albedo, vec3(0.12, 0.08, 0.06), spot * info.y);
     } else {
       // 기지 불빛 (밤에만)
-      float glow = smoothstep(r, 0.0, d);
+      float glow = (1.0 - smoothstep(0.0, r, d));
       float twinkle = 0.6 + 0.4 * snoise(vLocal * 140.0);
       emission += vec3(1.0, 0.78, 0.45) * glow * twinkle * info.y * (1.0 - day) * 1.6;
     }
@@ -287,7 +287,7 @@ void main() {
   float halo = exp(-r * 3.2) * 0.55;
   float angle = atan(p.y, p.x);
   float rays = pow(abs(cos(angle * 3.0 + uTime * 0.05)), 40.0) * exp(-r * 2.5) * uRays;
-  float a = (core + halo + rays) * uIntensity * smoothstep(1.0, 0.7, r);
+  float a = (core + halo + rays) * uIntensity * (1.0 - smoothstep(0.7, 1.0, r));
   gl_FragColor = vec4(uColor * a, a);
 }
 `
@@ -469,7 +469,7 @@ void main() {
     // 기울어진 강착 원반: 다가오는 쪽이 더 밝음 (도플러 증폭)
     vec2 q = vec2(p.x, p.y * 3.2);
     float dr = length(q);
-    float disk = smoothstep(0.95, 0.55, dr) * smoothstep(shadow * 1.05, shadow * 1.6, dr);
+    float disk = (1.0 - smoothstep(0.55, 0.95, dr)) * smoothstep(shadow * 1.05, shadow * 1.6, dr);
     float swirl = fbm(vec3(atan(q.y, q.x) * 2.0 - uTime * 0.8, dr * 9.0, 0.0)) * 0.5 + 0.5;
     float beam = 1.0 + 0.8 * p.x / max(dr, 0.1);
     vec3 hot = mix(vec3(1.0, 0.45, 0.15), vec3(1.0, 0.92, 0.75), swirl);
@@ -477,6 +477,6 @@ void main() {
   }
   float a = clamp(max(max(c.r, c.g), c.b), 0.0, 1.0);
   if (r < shadow) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
-  gl_FragColor = vec4(c, a * smoothstep(1.0, 0.75, r));
+  gl_FragColor = vec4(c, a * (1.0 - smoothstep(0.75, 1.0, r)));
 }
 `

@@ -22,5 +22,14 @@ describe('ΛCDM 우주', () => {
       growth(scaleFactor(AGE_NOW + 50)) - growth(scaleFactor(AGE_NOW + 40))
     const early = growth(scaleFactor(6)) - growth(scaleFactor(5))
     expect(late).toBeLessThan(early / 5)
+    // 미래에도 줄어들지 않고 일정한 값에 다가감
+    expect(late).toBeGreaterThanOrEqual(0)
+    const future = growth(scaleFactor(AGE_NOW + 100))
+    expect(future).toBeGreaterThan(growth(1))
+    expect(future).toBeLessThan(1.5)
+  })
+
+  it('초기에는 성장 인자가 척도 인자에 비례한다 (물질 지배)', () => {
+    expect(growth(0.01) / growth(0.02)).toBeCloseTo(0.5, 2)
   })
 })

@@ -124,6 +124,15 @@ function BodyDossier(props: { id: BodyId }) {
       : `${kind} · ${formatSig(d, l(), 3)} AU from the Sun`
   }
   const moons = () => moonsOf(props.id)
+  // 태양은 나이에 따라 질량·반지름이 바뀜 (블랙홀 사고 실험이면 사건의 지평선)
+  const sun = () => (props.id === 'sun' ? sunState(world()) : null)
+  const massEarth = () => body().massEarth * (sun()?.mass ?? 1)
+  const radiusKm = () => body().radiusKm * (sun()?.radius ?? 1)
+  const gravity = () => {
+    const s = sun()
+    if (!s) return body().gravity
+    return s.blackHole ? null : (body().gravity * s.mass) / s.radius ** 2
+  }
   return (
     <PassportCard
       title={pick(body().name)}
@@ -142,17 +151,18 @@ function BodyDossier(props: { id: BodyId }) {
         {
           label: t('dossier.mass'),
           value:
-            body().massEarth >= 0.01
-              ? `${formatSig(body().massEarth, l(), 3)} M⊕`
-              : `${formatPower(body().massEarth * 5.972e24, 2)} kg`,
+            massEarth() >= 0.01
+              ? `${formatSig(massEarth(), l(), 3)} M⊕`
+              : `${formatPower(massEarth() * 5.972e24, 2)} kg`,
         },
         {
           label: t('dossier.radius'),
-          value: `${formatBig(Math.round(body().radiusKm), l())} km`,
+          value: `${formatBig(Math.max(1, Math.round(radiusKm())), l())} km`,
         },
         {
           label: t('dossier.gravity'),
-          value: `${formatSig(body().gravity, l(), 3)} m/s²`,
+          value:
+            gravity() === null ? '—' : `${formatSig(gravity()!, l(), 3)} m/s²`,
         },
         {
           label: t('dossier.day'),

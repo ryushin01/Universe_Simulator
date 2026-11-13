@@ -13,12 +13,20 @@ export const SHARE_PARAM = 's'
 export const SAVE_KEY = 'universe-simulator:saves'
 export const MAX_SAVES = 8
 
-/** 주소에 담는 시나리오: 시간·예산·속도·구조물·바뀐 궤도·사라진 천체·지구 상태 */
+/**
+ * 주소에 담는 시나리오: 시간·예산·속도·구조물·바뀐 궤도·사라진 천체·지구 상태.
+ * 다가오는 소행성처럼 진행 중인 사건은 담지 않으므로, 그런 사건이 있으면 저장·공유를 막습니다
+ * (`hasPendingEvents`).
+ */
 export interface Snapshot {
   v: 1
   year: number
   speed: number
   budget: number
+  /** 누적 피해 ($B) */
+  losses?: number
+  /** 기지별 생존 비율 */
+  colonies?: Partial<Record<ProjectKind, number>>
   structures: Array<[ProjectKind, number, number]>
   overrides: Partial<
     Record<
@@ -28,7 +36,10 @@ export interface Snapshot {
   >
   removed: Partial<Record<BodyId, [number, RemovalReason]>>
   bh: boolean
-  earth: [number, number, number, number, number, number]
+  /** 기온, 바다, 오존, 생물권, 인구 비율, 궤도 이동, 충돌 겨울 냉각 (마지막은 없을 수 있음) */
+  earth:
+    | [number, number, number, number, number, number]
+    | [number, number, number, number, number, number, number]
   milestones: string[]
 }
 
@@ -68,6 +79,8 @@ export function toSnapshot(state: WorldState): Snapshot {
     year: state.year,
     speed: state.speedIndex,
     budget: state.budget,
+    losses: state.losses,
+    colonies: state.colonyHealth,
     structures: state.structures.map((s) => [
       s.kind,
       s.startYear,
@@ -76,7 +89,15 @@ export function toSnapshot(state: WorldState): Snapshot {
     overrides,
     removed,
     bh: state.sunBlackHole,
-    earth: [e.tempC, e.ocean, e.ozone, e.biosphere, e.popFactor, e.shiftAu],
+    earth: [
+      e.tempC,
+      e.ocean,
+      e.ozone,
+      e.biosphere,
+      e.popFactor,
+      e.shiftAu,
+      e.coolingC,
+    ],
     milestones: state.milestones,
   }
 }
@@ -93,6 +114,13 @@ export function validateSnapshot(raw: unknown): Snapshot | null {
   if (!finite(s.speed, 0, SPEEDS.length - 1) || !Number.isInteger(s.speed))
     return null
   if (!finite(s.budget, -1e15, 1e18)) return null
+  if (s.losses !== undefined && !finite(s.losses, 0, 1e18)) return null
+  if (s.colonies !== undefined) {
+    if (!s.colonies || typeof s.colonies !== 'object') return null
+    for (const [kind, health] of Object.entries(s.colonies))
+      if (!Object.hasOwn(PROJECT_BY_KIND, kind) || !finite(health, 0, 1))
+        return null
+  }
   if (!Array.isArray(s.structures) || s.structures.length > 40) return null
   const seen = new Set<string>()
   for (const item of s.structures) {
@@ -100,7 +128,7 @@ export function validateSnapshot(raw: unknown): Snapshot | null {
     const [kind, start, complete] = item
     if (
       typeof kind !== 'string' ||
-      !(kind in PROJECT_BY_KIND) ||
+      !Object.hasOwn(PROJECT_BY_KIND, kind) ||
       seen.has(kind)
     )
       return null
@@ -129,15 +157,17 @@ export function validateSnapshot(raw: unknown): Snapshot | null {
       return null
   }
   if (typeof s.bh !== 'boolean') return null
-  if (!Array.isArray(s.earth) || s.earth.length !== 6) return null
-  const [temp, ocean, ozone, bio, pop, shift] = s.earth
+  if (!Array.isArray(s.earth) || (s.earth.length !== 6 && s.earth.length !== 7))
+    return null
+  const [temp, ocean, ozone, bio, pop, shift, cooling = 0] = s.earth
   if (
     !finite(temp, -273, 5000) ||
     !finite(ocean, 0, 1) ||
     !finite(ozone, 0, 1) ||
     !finite(bio, 0, 100) ||
     !finite(pop, 0, 1) ||
-    !finite(shift, 0, 50)
+    !finite(shift, 0, 50) ||
+    !finite(cooling, -50, 0)
   )
     return null
   if (
@@ -172,11 +202,14 @@ export function fromSnapshot(snapshot: Snapshot): WorldState {
     [BodyId, [number, RemovalReason]]
   >)
     removed[id] = { year: v[0], reason: v[1] }
-  const [tempC, ocean, ozone, biosphere, popFactor, shiftAu] = snapshot.earth
+  const [tempC, ocean, ozone, biosphere, popFactor, shiftAu, coolingC = 0] =
+    snapshot.earth
   return {
     ...base,
     speedIndex: snapshot.speed,
     budget: snapshot.budget,
+    losses: snapshot.losses ?? 0,
+    colonyHealth: { ...snapshot.colonies },
     structures: snapshot.structures.map(
       ([kind, startYear, completeYear], i) => ({
         id: i + 1,
@@ -189,7 +222,7 @@ export function fromSnapshot(snapshot: Snapshot): WorldState {
     overrides,
     removed,
     sunBlackHole: snapshot.bh,
-    earth: { tempC, coolingC: 0, ocean, ozone, biosphere, popFactor, shiftAu },
+    earth: { tempC, coolingC, ocean, ozone, biosphere, popFactor, shiftAu },
     milestones: snapshot.milestones,
     nextId: snapshot.structures.length + 1,
   }

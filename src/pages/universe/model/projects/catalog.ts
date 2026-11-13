@@ -231,8 +231,8 @@ export const PROJECTS: ProjectSpec[] = [
     category: 'mega',
     sf: true,
     effect: both(
-      '태양빛을 모두 모으는 껍질 (카르다쇼프 2단계). 껍질 바깥의 화성 너머 천체에는 햇빛이 닿지 않습니다.',
-      'A shell that captures all sunlight (Kardashev Type II). Worlds beyond it, from Mars outward, go dark.',
+      '태양빛을 모두 모으는 껍질 (카르다쇼프 2단계). 화성까지는 껍질 안쪽이라 그대로지만, 껍질 바깥의 세레스·목성부터는 햇빛이 닿지 않습니다.',
+      'A shell that captures all sunlight (Kardashev Type II). Mars stays inside it, but worlds beyond — from Ceres and Jupiter outward — go dark.',
     ),
   },
   {

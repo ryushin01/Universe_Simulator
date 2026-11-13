@@ -13,8 +13,9 @@ import {
   validateSnapshot,
 } from '../../model/world/snapshot'
 import type { Snapshot } from '../../model/world/snapshot'
+import { hasPendingEvents } from '../../model/world/selectors'
 import { formatSimDate } from '../../model/world/text'
-import { t } from '../i18n'
+import { createMessage, t } from '../i18n'
 import styles from './status.module.css'
 
 interface Saved {
@@ -51,27 +52,32 @@ export function openSharedScenario(): boolean {
 
 /** 공유 링크 복사와 브라우저 저장 */
 export function ScenarioShare() {
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const [saves, setSaves] = createSignal<Saved[]>([])
   const [name, setName] = createSignal('')
   onMount(() => setSaves(readSaves()))
+  // 진행 중인 사건은 저장 형식에 담지 못하므로 끝난 뒤에 저장·공유
+  const blocked = () => hasPendingEvents(world())
+  const blockedHint = () => (blocked() ? 'share-blocked' : undefined)
 
   const share = async () => {
+    if (blocked()) return
     const url = new URL(window.location.href)
     url.search = ''
     url.hash = ''
     url.searchParams.set(SHARE_PARAM, encodeSnapshot(toSnapshot(world())))
     try {
       await navigator.clipboard.writeText(url.toString())
-      setMessage(t('share.copied'))
+      setMessage(() => t('share.copied'))
     } catch {
       window.history.replaceState(null, '', url)
-      setMessage(t('share.inAddress'))
+      setMessage(() => t('share.inAddress'))
     }
   }
 
   const save = (event: SubmitEvent) => {
     event.preventDefault()
+    if (blocked()) return
     const label = name().trim() || formatSimDate(world().year, locale())
     const next = [
       {
@@ -85,15 +91,15 @@ export function ScenarioShare() {
       window.localStorage.setItem(SAVE_KEY, JSON.stringify(next))
       setSaves(next)
       setName('')
-      setMessage(t('share.saved', { name: label }))
+      setMessage(() => t('share.saved', { name: label }))
     } catch {
-      setMessage(t('share.saveFailed'))
+      setMessage(() => t('share.saveFailed'))
     }
   }
 
   const load = (saved: Saved) => {
     worldActions.replace(fromSnapshot(saved.snapshot))
-    setMessage(t('share.loaded', { name: saved.name }))
+    setMessage(() => t('share.loaded', { name: saved.name }))
   }
 
   const remove = (saved: Saved) => {
@@ -101,21 +107,29 @@ export function ScenarioShare() {
     try {
       window.localStorage.setItem(SAVE_KEY, JSON.stringify(next))
     } catch {
-      // 무시
+      // 저장소에 쓰지 못하면 목록을 그대로 두고 알림 (다시 열면 되살아나므로)
+      setMessage(() => t('share.removeFailed', { name: saved.name }))
+      return
     }
     setSaves(next)
-    setMessage(t('share.removed', { name: saved.name }))
+    setMessage(() => t('share.removed', { name: saved.name }))
   }
 
   return (
     <details class={styles.block}>
       <summary class={styles.heading}>{t('share.title')}</summary>
       <p class={styles.small}>{t('share.help')}</p>
+      <Show when={blocked()}>
+        <p id="share-blocked" class={styles.small}>
+          {t('share.blocked')}
+        </p>
+      </Show>
       <div class={styles.actions}>
         <Button
           size="sm"
           onClick={share}
-          disabled={world().mission?.status === 'running'}
+          disabled={blocked()}
+          aria-describedby={blockedHint()}
         >
           {t('share.copy')}
         </Button>
@@ -132,7 +146,12 @@ export function ScenarioShare() {
           placeholder={t('share.name')}
           onInput={(e) => setName(e.currentTarget.value)}
         />
-        <Button size="sm" type="submit">
+        <Button
+          size="sm"
+          type="submit"
+          disabled={blocked()}
+          aria-describedby={blockedHint()}
+        >
           {t('share.save')}
         </Button>
       </form>

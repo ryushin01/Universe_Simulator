@@ -1,23 +1,16 @@
 import { For, Show, createSignal } from 'solid-js'
 import { locale } from '@/shared/i18n'
 import { Button, ChoiceGroup, SelectField, StatusMessage } from '@/shared/ui'
-import { formatMoney, formatPercent, formatSig, length } from '@/shared/lib'
+import { formatMoney, formatPercent, formatSig } from '@/shared/lib'
 import { BODIES } from '../../model/solar/bodies'
 import type { BodyId } from '../../model/solar/bodies'
-import {
-  STORM_CLASSES,
-  stormMitigation,
-  stormTravelDays,
-} from '../../model/hazards/storm'
+import { STORM_CLASSES, stormMitigation } from '../../model/hazards/storm'
 import type { StormClass } from '../../model/hazards/storm'
 import { world, worldActions } from '../../model/world/store'
-import {
-  bodyPositionAu,
-  hasProject,
-  stormFrontAu,
-} from '../../model/world/selectors'
+import { makeStorm } from '../../model/world/factory'
+import { hasProject, stormFrontAu } from '../../model/world/selectors'
 import { formatDuration } from '../../model/world/text'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
 const TARGETS: Array<BodyId | 'random'> = [
@@ -32,7 +25,7 @@ const TARGETS: Array<BodyId | 'random'> = [
 export function StormPanel() {
   const [cls, setCls] = createSignal<StormClass>('carrington')
   const [target, setTarget] = createSignal<BodyId | 'random'>('earth')
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const l = () => locale()
   const spec = () => STORM_CLASSES[cls()]
   const mitigation = () =>
@@ -40,17 +33,18 @@ export function StormPanel() {
       hasProject(world(), 'sentinel'),
       hasProject(world(), 'grid-shield'),
     )
-  const earthDays = () => {
-    const p = bodyPositionAu(world(), 'earth')
-    return p ? stormTravelDays(spec().speedKms, length(p)) : null
-  }
+  // 실제로 일으킬 때와 같은 계산으로 미리 봄: 다른 행성을 겨눠도 원뿔 안에 지구가 들 수 있음
+  const earthHit = () =>
+    makeStorm(world(), cls(), target()).hits.find((h) => h.body === 'earth')
   const active = () =>
     world().storms.filter((s) => {
       const r = stormFrontAu(s, world().year, STORM_CLASSES[s.cls].speedKms)
       return r > 0 && r < 45
     })
-  const launch = () =>
-    setMessage(pick(worldActions.launchStorm(cls(), target()).message))
+  const launch = () => {
+    const result = worldActions.launchStorm(cls(), target())
+    setMessage(() => pick(result.message))
+  }
 
   return (
     <div class={styles.panel}>
@@ -78,19 +72,19 @@ export function StormPanel() {
       <dl class={styles.preview}>
         <dt>{t('storm.arrival')}</dt>
         <dd>
-          {target() === 'earth' && earthDays() !== null
-            ? formatDuration(earthDays()! / 365.25, l())
-            : target() === 'earth'
-              ? '—'
-              : t('storm.miss')}
+          {earthHit()
+            ? formatDuration(earthHit()!.year - world().year, l())
+            : t('storm.miss')}
         </dd>
         <dt>{t('storm.damage')}</dt>
         <dd
           class={
-            spec().earthLossB * (1 - mitigation()) >= 100 ? styles.danger : ''
+            earthHit() && spec().earthLossB * (1 - mitigation()) >= 100
+              ? styles.danger
+              : ''
           }
         >
-          {target() === 'earth'
+          {earthHit()
             ? formatMoney(spec().earthLossB * (1 - mitigation()), l())
             : '—'}
         </dd>

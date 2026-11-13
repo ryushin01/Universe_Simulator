@@ -25,7 +25,8 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   // 프로덕션 빌드 결과를 띄워 검사 (먼저 pnpm build 필요)
   webServer: {
-    command: `pnpm preview --port ${PORT} --strictPort`,
+    // preview 스크립트의 --port 4183과 겹치지 않게 Vite를 바로 부름
+    command: `pnpm exec vite preview --port ${PORT} --strictPort`,
     port: PORT,
     reuseExistingServer: !process.env.CI,
   },

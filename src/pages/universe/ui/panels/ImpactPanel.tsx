@@ -28,7 +28,7 @@ import { world, worldActions } from '../../model/world/store'
 import { hasProject, isRemoved } from '../../model/world/selectors'
 import { formatDuration, formatKm, formatMt } from '../../model/world/text'
 import type { Impact } from '../../model/world/types'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -86,7 +86,7 @@ const PRESETS: Array<{
 function IncomingCard(props: { id: number }) {
   const [method, setMethod] = createSignal<DeflectMethod>('kinetic')
   const [count, setCount] = createSignal(5)
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const [error, setError] = createSignal(false)
   const l = () => locale()
   const im = () => world().impacts.find((i) => i.id === props.id) as Impact
@@ -100,7 +100,7 @@ function IncomingCard(props: { id: number }) {
   const send = () => {
     const result = worldActions.launchDeflection(im().id, method(), count())
     setError(!result.ok)
-    setMessage(pick(result.message))
+    setMessage(() => pick(result.message))
   }
   return (
     <li class={styles.card}>
@@ -150,10 +150,15 @@ function IncomingCard(props: { id: number }) {
             type="number"
             min="1"
             max="20"
+            step="1"
             value={count()}
             onInput={(e) =>
+              // 탐사선은 한 대 단위 (1.5대처럼 소수는 반올림)
               setCount(
-                Math.min(20, Math.max(1, Number(e.currentTarget.value) || 1)),
+                Math.min(
+                  20,
+                  Math.max(1, Math.round(Number(e.currentTarget.value)) || 1),
+                ),
               )
             }
             class={styles.number}
@@ -180,7 +185,7 @@ export function ImpactPanel() {
   const [kind, setKind] = createSignal<ImpactorKind>('stony')
   const [diameterIndex, setDiameterIndex] = createSignal(5)
   const [warning, setWarning] = createSignal<WarningId>('year5')
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const [error, setError] = createSignal(false)
   const l = () => locale()
   const diameter = () => DIAMETER_STEPS[diameterIndex()]
@@ -210,7 +215,7 @@ export function ImpactPanel() {
       warningYears: years,
     })
     setError(!result.ok)
-    setMessage(pick(result.message))
+    setMessage(() => pick(result.message))
   }
 
   return (

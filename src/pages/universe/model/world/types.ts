@@ -177,7 +177,8 @@ export interface WorldState {
   earth: EarthState
   /** 기지별 생존 비율 (0~1) */
   colonyHealth: Partial<Record<ProjectKind, number>>
-  meteorStorm: { showerId: string; untilYear: number } | null
+  /** 유성 폭풍: 극대 앞뒤의 정해진 기간에만 활동도를 키움 */
+  meteorStorm: { showerId: string; fromYear: number; untilYear: number } | null
   /** 한 번만 알릴 이정표 */
   milestones: string[]
   events: LogEvent[]

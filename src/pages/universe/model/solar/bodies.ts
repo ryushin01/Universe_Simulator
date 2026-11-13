@@ -753,4 +753,5 @@ export const MAIN_DESTINATIONS: BodyId[] = [
 export const moonsOf = (id: BodyId): BodyId[] =>
   BODY_IDS.filter((other) => BODIES[other].parent === id)
 
-export const isBodyId = (value: string): value is BodyId => value in BODIES
+export const isBodyId = (value: string): value is BodyId =>
+  Object.hasOwn(BODIES, value)

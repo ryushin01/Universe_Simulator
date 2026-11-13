@@ -273,9 +273,12 @@ test.describe('시뮬레이션 흐름', () => {
     await page.goto(shared)
     await expect(page.getByRole('button', { name: '탐사 시작' })).toHaveCount(0)
     await page.getByRole('tab', { name: '건설' }).click()
-    await expect(
-      page.getByRole('tabpanel', { name: '건설' }).getByText('완공').first(),
-    ).toBeVisible()
+    // '바로 완공' 체크박스 글자와 헷갈리지 않게 경보 위성 카드 안에서 확인
+    const satellite = page
+      .getByRole('tabpanel', { name: '건설' })
+      .getByRole('listitem')
+      .filter({ hasText: '우주 기상 경보 위성' })
+    await expect(satellite.getByText('완공', { exact: true })).toBeVisible()
   })
 
   test('영어로 바꾸면 문서 언어와 문구가 바뀐다', async ({ page }) => {

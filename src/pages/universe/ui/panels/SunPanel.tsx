@@ -1,4 +1,4 @@
-import { For, createSignal } from 'solid-js'
+import { For, Show } from 'solid-js'
 import { locale } from '@/shared/i18n'
 import { Button, StatusMessage } from '@/shared/ui'
 import { formatSig, formatYears } from '@/shared/lib'
@@ -10,7 +10,7 @@ import {
 } from '../../model/solar/sun'
 import { world, worldActions } from '../../model/world/store'
 import { sunState } from '../../model/world/selectors'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -61,7 +61,7 @@ const REFERENCE = [
 
 /** 태양의 진화: 지금 상태, 이정표로 이동, H-R도 */
 export function SunPanel() {
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const l = () => locale()
   const sun = () => sunState(world())
   const age = () => sunAgeGyr(world().year)
@@ -72,7 +72,7 @@ export function SunPanel() {
 
   const go = (ageGyr: number) => {
     const result = worldActions.jumpTo(yearAtSunAge(ageGyr))
-    setMessage(pick(result.message))
+    setMessage(() => pick(result.message))
   }
 
   return (
@@ -123,14 +123,17 @@ export function SunPanel() {
               </g>
             )}
           </For>
-          <circle
-            cx={x(sunAt(age()).temperature)}
-            cy={y(sunAt(age()).luminosity)}
-            r="5"
-            fill="#ff9a52"
-            stroke="#fff"
-            stroke-width="1.5"
-          />
+          {/* 블랙홀 사고 실험 중에는 별이 아니므로 현재 위치 표지를 감춤 (진화 경로는 그대로) */}
+          <Show when={!sun().blackHole}>
+            <circle
+              cx={x(sunAt(age()).temperature)}
+              cy={y(sunAt(age()).luminosity)}
+              r="5"
+              fill="#ff9a52"
+              stroke="#fff"
+              stroke-width="1.5"
+            />
+          </Show>
           <text
             x={W / 2 + 15}
             y={H - 6}

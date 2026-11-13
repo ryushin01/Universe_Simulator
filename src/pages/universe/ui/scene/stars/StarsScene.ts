@@ -42,7 +42,11 @@ interface StarVisual {
   stem: Line
   base: Vector3
   size: number
+  /** 폭발 전 빛깔 (처음으로 돌리거나 폭발 전 저장을 불러오면 되돌림) */
+  color: Color
   blastId?: string
+  /** 폭발 모습으로 바꿨는지 */
+  exploded?: boolean
 }
 
 const lineMaterial = (color: string, opacity: number) =>
@@ -150,6 +154,7 @@ export function createStarsScene(): ScaleScene {
       stem,
       base,
       size,
+      color,
       blastId: star.blastId,
     })
   }
@@ -202,6 +207,9 @@ export function createStarsScene(): ScaleScene {
       return (hit?.object.userData.id as string | undefined) ?? null
     },
     update(ctx: FrameContext) {
+      // 세계가 바뀌어 사라진 폭발의 시작 시각은 지움 (새 폭발이 같은 id를 받을 수 있음)
+      for (const id of flareStart.keys())
+        if (!ctx.world.blasts.some((b) => b.id === id)) flareStart.delete(id)
       faceCamera(sun, ctx.camera)
       for (const v of visuals.values()) {
         faceCamera(v.glow, ctx.camera)
@@ -218,6 +226,14 @@ export function createStarsScene(): ScaleScene {
           u.uIntensity.value = 1.4
           u.uColor.value.set('#e8f0ff')
           v.core.visible = false
+          v.exploded = true
+        } else if (v.exploded) {
+          // 폭발 기록이 없는 세계(처음으로·불러오기)로 바뀌면 원래 별로
+          v.glow.scale.setScalar(v.size * 4)
+          u.uIntensity.value = 1
+          u.uColor.value.copy(v.color)
+          v.core.visible = true
+          v.exploded = false
         }
       }
       const t = ctx.selected ? target(ctx.selected) : null

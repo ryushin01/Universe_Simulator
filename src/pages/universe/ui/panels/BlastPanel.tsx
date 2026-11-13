@@ -11,22 +11,24 @@ import {
 import type { BlastKind } from '../../model/hazards/stellar'
 import { world, worldActions } from '../../model/world/store'
 import { formatDuration } from '../../model/world/text'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
 /** 초신성·감마선 폭발·킬로노바·마그네타 거대 플레어 */
 export function BlastPanel() {
   const [sourceId, setSourceId] = createSignal('betelgeuse')
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const l = () => locale()
   const source = () => BLAST_SOURCES.find((s) => s.id === sourceId())!
   const magnitude = () => peakApparentMagnitude(source())
   const loss = () => ozoneLoss(source())
   const exploded = () =>
     source().real && world().blasts.some((b) => b.sourceId === sourceId())
-  const trigger = () =>
-    setMessage(pick(worldActions.triggerBlast(sourceId()).message))
+  const trigger = () => {
+    const result = worldActions.triggerBlast(sourceId())
+    setMessage(() => pick(result.message))
+  }
 
   return (
     <div class={styles.panel}>

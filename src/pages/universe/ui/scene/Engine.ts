@@ -45,6 +45,8 @@ export class Engine {
   private elapsed = 0
   private lastFocus: string | null | undefined = undefined
   private lastIntro = true
+  /** 전체 보기 거리 (압축↔실제 거리 보기를 바꾸면 달라짐) */
+  private lastOverviewDistance = 0
   /** 대상을 바꾼 뒤 다가가는 목표 거리 (사용자가 직접 확대하면 취소) */
   private flyDistance: number | null = null
   private pointerDown = new Vector2()
@@ -225,13 +227,21 @@ export class Engine {
     // 카메라: 대상을 따라가며 부드럽게 다가감
     const target = focusId ? this.current.target(focusId) : null
     const overview = this.current.overview()
-    if (focusId !== this.lastFocus || introOn !== this.lastIntro) {
+    // 따라가는 대상이 없을 때 거리 보기 방식이 바뀌면 새 전체 모습에 맞춰 다시 물러남
+    const overviewChanged =
+      !focusId && overview.distance !== this.lastOverviewDistance
+    if (
+      focusId !== this.lastFocus ||
+      introOn !== this.lastIntro ||
+      overviewChanged
+    ) {
       this.flyDistance = target
         ? target.radius * (introOn ? 3.4 : 5.5)
         : overview.distance
       this.lastFocus = focusId
       this.lastIntro = introOn
     }
+    this.lastOverviewDistance = overview.distance
     const goal = target ? target.position : overview.target
     const k = reduced ? 1 : 1 - Math.exp(-dt * 3.5)
     const before = this.controls.target.clone()

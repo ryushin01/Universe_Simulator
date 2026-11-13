@@ -336,12 +336,27 @@ export const MISSION_INCOME: Record<string, boolean> = {
 export const stormFrontAu = (storm: Storm, year: number, speedKms: number) =>
   Math.max(0, ((year - storm.launchYear) * 365.25 * 86_400 * speedKms) / AU_KM)
 
-/** 지금 태양계를 지나가는 중인 근접 통과 (없으면 undefined) */
-export const activeFlyby = (state: WorldState): Flyby | undefined =>
-  state.flybys.find(
-    (f) =>
-      f.phase === 'approach' || f.phase === 'nbody' || f.phase === 'leaving',
+/**
+ * 저장·공유 링크에 담지 못하는 진행 중인 사건이 있는지:
+ * 다가오는 소행성, 아직 닿지 않은 태양 폭풍, 근접 통과, 아직 오지 않은 별 폭발 잔해, 진행 중인 미션
+ */
+export function hasPendingEvents(state: WorldState): boolean {
+  return (
+    state.mission?.status === 'running' ||
+    state.impacts.some((im) => im.status === 'incoming') ||
+    state.storms.some((st) => !st.announced || st.hits.some((h) => !h.done)) ||
+    state.flybys.some((f) => f.phase !== 'done') ||
+    state.blasts.some((b) => b.debrisYear !== null && !b.debrisDone)
   )
+}
+
+/**
+ * 지금 태양계를 지나가는 중인 근접 통과 (없으면 undefined).
+ * 앞선 천체가 멀어지는 동안 새 천체를 보낼 수 있으므로 다가오는·N체 계산 중인 것을 먼저 고름
+ */
+export const activeFlyby = (state: WorldState): Flyby | undefined =>
+  state.flybys.find((f) => f.phase === 'approach' || f.phase === 'nbody') ??
+  state.flybys.find((f) => f.phase === 'leaving')
 
 /** 침입 천체의 태양 기준 위치 (AU) */
 export function intruderPositionAu(state: WorldState, flyby: Flyby): Vec3 {
@@ -371,9 +386,16 @@ export function activeAuroras(state: WorldState) {
   return state.auroras.filter((a) => a.untilYear > state.year)
 }
 
+/** 유성 폭풍 기간(극대 하루 전부터 하루 반 뒤까지)인지 */
+export const meteorStormActive = (state: WorldState, showerId?: string) =>
+  state.meteorStorm !== null &&
+  (showerId === undefined || state.meteorStorm.showerId === showerId) &&
+  state.meteorStorm.fromYear <= state.year &&
+  state.year < state.meteorStorm.untilYear
+
 export function currentShower(state: WorldState) {
   const storm =
-    state.meteorStorm && state.meteorStorm.untilYear > state.year
+    state.meteorStorm && meteorStormActive(state)
       ? { showerId: state.meteorStorm.showerId, factor: METEOR_STORM_FACTOR }
       : null
   return activeShower(state.year, storm)

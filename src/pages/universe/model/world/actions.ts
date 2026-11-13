@@ -105,6 +105,16 @@ export function jumpTo(state: WorldState, year: number): Outcome {
       'You cannot go back in time.',
     )
   const next = advanceTo(state, target)
+  // 건너뛰는 도중 근접 통과가 시작되면 그 시점에서 멈춤
+  if (next.nbody && next.year < target)
+    return done(
+      { ...next, orbitYear: next.year },
+      compose((l) =>
+        l === 'ko'
+          ? `${formatSimDate(next.year, l)}에 근접 통과가 시작되어 그 시점에서 멈췄습니다. N체 계산이 끝난 뒤 다시 건너뛰세요.`
+          : `A close encounter began on ${formatSimDate(next.year, l)}, so the jump stopped there. Skip again once the N-body run ends.`,
+      ),
+    )
   return done(
     { ...next, orbitYear: next.year },
     compose((l) =>
@@ -155,8 +165,10 @@ export function launchDeflection(
   state: WorldState,
   impactId: number,
   method: DeflectMethod,
-  count: number,
+  requested: number,
 ): Outcome {
+  // 탐사선은 한 대 단위 (1~20대)
+  const count = clamp(Math.round(requested), 1, 20)
   const impact = state.impacts.find((i) => i.id === impactId)
   if (!impact || impact.status !== 'incoming')
     return fail(state, '다가오는 천체가 없습니다.', 'No incoming object.')
@@ -389,7 +401,14 @@ export function startMeteorStorm(state: WorldState, showerId: string): Outcome {
   if (!shower) return fail(state, '알 수 없는 유성우입니다.', 'Unknown shower.')
   const peak = nextPeakYear(shower, state.year)
   const s = log(
-    { ...state, meteorStorm: { showerId, untilYear: peak + 1.5 / 365.25 } },
+    {
+      ...state,
+      meteorStorm: {
+        showerId,
+        fromYear: peak - 1 / 365.25,
+        untilYear: peak + 1.5 / 365.25,
+      },
+    },
     compose((l) =>
       l === 'ko'
         ? `${shower.parent.ko}이(가) 남긴 촘촘한 먼지 줄기를 지구가 지나갑니다. ${formatSimDate(peak, l)} ${shower.name.ko}가 유성 폭풍이 됩니다.`

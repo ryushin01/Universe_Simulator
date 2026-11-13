@@ -277,6 +277,14 @@ export const MESSAGES = {
   'share.remove': ['지우기', 'Delete'],
   'share.removeNamed': ['{name} 지우기', 'Delete {name}'],
   'share.removed': ['‘{name}’을(를) 지웠습니다.', 'Deleted “{name}”.'],
+  'share.removeFailed': [
+    '‘{name}’을(를) 지우지 못했습니다. 브라우저 저장 공간을 쓸 수 있는지 확인하세요.',
+    'Could not delete “{name}”. Check that browser storage is available.',
+  ],
+  'share.blocked': [
+    '다가오는 소행성, 아직 닿지 않은 태양 폭풍, 근접 통과, 별 폭발 잔해, 미션처럼 진행 중인 사건은 저장할 수 없습니다. 사건이 끝난 뒤에 저장하거나 공유하세요.',
+    'Ongoing events — incoming asteroids, solar storms still on their way, close encounters, supernova debris and missions — cannot be saved. Save or share once they are over.',
+  ],
   // 탭
   'tabs.label': ['우주 관리 항목', 'Space control sections'],
   'tabs.impact': ['충돌', 'Impact'],

@@ -52,6 +52,7 @@ import {
   humanity,
   incomeB,
   isRemoved,
+  meteorStormActive,
   marsAtmosphere,
   bodyTemperatureC,
   shadeFraction,
@@ -157,22 +158,29 @@ export function tick(state: WorldState, dtSeconds: number): WorldState {
   return next
 }
 
-/** target 해까지 사건을 시간 순서대로 처리하며 진행 */
+/**
+ * target 해까지 사건을 시간 순서대로 처리하며 진행.
+ * 도중에 N체 근접 통과가 시작되면 그 뒤로는 한 프레임 분량만 진행하고 멈춥니다
+ * (N체는 하루 단위로 적분하므로 긴 구간을 한 번에 계산하면 브라우저가 멈춤).
+ */
 export function advanceTo(state: WorldState, target: number): WorldState {
+  let end = target
+  const limitIfEncounter = (s: WorldState) => {
+    if (s.nbody && !state.nbody)
+      end = Math.min(end, s.year + NBODY_MAX_DAYS_PER_FRAME / 365.25)
+  }
   // 지금 시각에 이미 닿은 사건(예: 곧바로 N체 구역에 들어오는 근접 통과)부터 처리
   let s = processDue(state)
+  limitIfEncounter(s)
   let guard = 0
-  while (s.year < target && guard++ < 2000) {
+  while (s.year < end && guard++ < 2000) {
     // 긴 구간도 5천만 년마다 상태를 점검해 이정표가 제때 기록되게 함
-    const next = Math.min(
-      target,
-      nextEventYear(s, target),
-      s.year + MAX_CHUNK_YEARS,
-    )
+    const next = Math.min(end, nextEventYear(s, end), s.year + MAX_CHUNK_YEARS)
     // 부동소수점 누적 오차 없이 사건 시각에 정확히 맞춤
     s = { ...integrate(s, next - s.year), year: next }
     s = processDue(s)
     s = checkConditions(s)
+    limitIfEncounter(s)
     if (
       state.mission?.status === 'running' &&
       s.mission?.status !== 'running'
@@ -1098,10 +1106,7 @@ function logMeteorPeaks(before: WorldState, after: WorldState): WorldState {
         ? shower.peakLongitude > l0 && shower.peakLongitude <= l1
         : shower.peakLongitude > l0 || shower.peakLongitude <= l1
     if (!crossed) continue
-    const storm =
-      s.meteorStorm &&
-      s.meteorStorm.showerId === shower.id &&
-      s.meteorStorm.untilYear > s.year
+    const storm = meteorStormActive(s, shower.id)
     s = log(
       s,
       compose((l) =>

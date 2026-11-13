@@ -1,4 +1,4 @@
-import { For, Show, createEffect, createSignal } from 'solid-js'
+import { For, Show, createEffect } from 'solid-js'
 import { locale } from '@/shared/i18n'
 import { Button, StatusMessage } from '@/shared/ui'
 import { formatMoney } from '@/shared/lib'
@@ -6,12 +6,12 @@ import { MISSIONS, MISSION_BY_ID } from '../../model/world/missions'
 import type { MissionId } from '../../model/world/types'
 import { world, worldActions } from '../../model/world/store'
 import { formatDuration } from '../../model/world/text'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import styles from './status.module.css'
 
 /** 미션 고르기·진행 상황·결과 대화상자 */
 export function MissionPanel() {
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   let dialog: HTMLDialogElement | undefined
   let opener: HTMLElement | null = null
   const mission = () => world().mission
@@ -27,7 +27,7 @@ export function MissionPanel() {
 
   const start = (id: MissionId) => {
     const result = worldActions.startMission(id)
-    setMessage(pick(result.message))
+    setMessage(() => pick(result.message))
   }
 
   const close = () => {
@@ -102,9 +102,10 @@ export function MissionPanel() {
               <div class={styles.actions}>
                 <Button
                   size="sm"
-                  onClick={() =>
-                    setMessage(pick(worldActions.quitMission().message))
-                  }
+                  onClick={() => {
+                    const result = worldActions.quitMission()
+                    setMessage(() => pick(result.message))
+                  }}
                 >
                   {t('mission.quit')}
                 </Button>

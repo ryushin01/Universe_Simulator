@@ -23,6 +23,13 @@ export type SunStage =
   | 'planetaryNebula'
   | 'whiteDwarf'
 
+/** 점근 거성 가지 끝 (행성상 성운이 시작되는 나이, 십억 년) */
+const AGB_TIP_GYR = 12.365
+
+/** 백색 왜성 냉각 (메스텔 냉각: L ∝ t^−1.4), 광도 L☉ */
+const whiteDwarfLuminosity = (ageGyr: number) =>
+  clamp(1e-3 * (ageGyr - AGB_TIP_GYR) ** -1.4, 2e-6, 100)
+
 /**
  * 태양 진화 경로 [나이(십억 년), 광도(L☉), 반지름(R☉), 질량(M☉)].
  * Sackmann et al.(1993), Schröder & Smith(2008)의 값을 바탕으로 단순화했습니다.
@@ -54,10 +61,11 @@ const TRACK: ReadonlyArray<readonly [number, number, number, number]> = [
   [12.3, 110, 20, 0.66],
   [12.33, 500, 60, 0.63],
   [12.355, 2000, 120, 0.58],
-  [12.365, 3000, 180, 0.54],
+  [AGB_TIP_GYR, 3000, 180, 0.54],
   [12.3651, 3500, 1, 0.54],
   [12.366, 1000, 0.05, 0.54],
-  [12.367, 100, 0.0125, 0.54],
+  // 마지막 점은 냉각 곡선 위에 두어 표가 끝나는 곳에서 광도가 끊기지 않게 함
+  [12.367, whiteDwarfLuminosity(12.367), 0.0125, 0.54],
 ]
 
 /** 단계가 바뀌는 나이 (십억 년) */
@@ -66,7 +74,7 @@ export const STAGE_AGES = {
   redGiant: 11.6,
   heliumFlash: 12.167,
   agb: 12.27,
-  agbTip: 12.365,
+  agbTip: AGB_TIP_GYR,
   /** 행성상 성운은 실제로 수만 년이지만 보이도록 150만 년 동안 그림 */
   whiteDwarf: 12.3665,
 } as const
@@ -111,9 +119,7 @@ export function sunAt(ageGyr: number): SunState {
     radius = interpolate(R_TRACK, ageGyr, 'log')
     mass = interpolate(M_TRACK, ageGyr)
   } else {
-    // 백색 왜성 냉각 (메스텔 냉각: L ∝ t^−1.4)
-    const coolingGyr = ageGyr - STAGE_AGES.agbTip
-    luminosity = clamp(1e-3 * coolingGyr ** -1.4, 2e-6, 100)
+    luminosity = whiteDwarfLuminosity(ageGyr)
     radius = 0.0125
     mass = 0.54
   }

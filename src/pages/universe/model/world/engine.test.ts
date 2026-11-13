@@ -8,11 +8,13 @@ import {
   launchStorm,
   setSpeed,
   setSunBlackHole,
+  startMeteorStorm,
   startMission,
   triggerBlast,
 } from './actions'
 import {
   bodyElements,
+  currentShower,
   earthTemperatureC,
   humanity,
   isRemoved,
@@ -21,11 +23,32 @@ import {
 } from './selectors'
 import { yearAtSunAge } from '../solar/sun'
 import { FLYBY_PRESETS } from '../hazards/flyby'
+import { METEOR_SHOWERS, nextPeakYear } from '../hazards/meteors'
 import type { WorldState } from './types'
 
 const START = 2026.87
 const fresh = () => ({ ...initialWorld(START), budget: 1e12 })
 const run = (s: WorldState, years: number) => advanceTo(s, s.year + years)
+/** 화면처럼 여러 번 나눠 진행 (N체 근접 통과는 한 번에 한 프레임 분량만 진행됨) */
+const runUntil = (s: WorldState, year: number) => {
+  let next = s
+  for (let i = 0; i < 10_000 && next.year < year; i++)
+    next = advanceTo(next, year)
+  return next
+}
+const flybyInput = (id: string) => {
+  const preset = FLYBY_PRESETS.find((p) => p.id === id)!
+  return {
+    presetId: preset.id,
+    kind: preset.kind,
+    massSun: preset.massSun,
+    closestAu: preset.closestAu,
+    speedKms: preset.speedKms,
+    inclination: preset.inclination,
+    longitude: preset.longitude,
+    name: preset.name,
+  }
+}
 const texts = (s: WorldState) => s.events.map((e) => e.text.ko).join('\n')
 
 describe('시간 진행', () => {
@@ -163,24 +186,37 @@ describe('블랙홀', () => {
   })
 
   it('태양 같은 별이 40AU를 지나가면 N체 계산 뒤 해왕성 궤도가 바뀐다', () => {
-    const preset = FLYBY_PRESETS.find((p) => p.id === 'sun-like')!
-    let s = launchFlyby(fresh(), {
-      presetId: preset.id,
-      kind: preset.kind,
-      massSun: preset.massSun,
-      closestAu: preset.closestAu,
-      speedKms: preset.speedKms,
-      inclination: preset.inclination,
-      longitude: preset.longitude,
-      name: preset.name,
-    }).state
+    let s = launchFlyby(fresh(), flybyInput('sun-like')).state
     const closest = s.flybys[0].closestYear
-    s = run(s, closest - s.year + 60)
+    s = runUntil(s, closest + 60)
     expect(s.nbody).toBeNull()
     expect(s.flybys[0].phase).not.toBe('approach')
     const neptune = s.overrides.neptune
     if (neptune) expect(neptune.elements.e).not.toBeCloseTo(0.0086, 3)
     else expect(isRemoved(s, 'neptune')).toBe(true)
     expect(texts(s)).toMatch(/지나갔습니다/)
+  })
+
+  it('건너뛰는 도중 근접 통과가 시작되면 그 시점에서 멈춘다', () => {
+    const s = launchFlyby(fresh(), flybyInput('black-hole')).state
+    const far = s.year + 5e7
+    const result = jumpTo(s, far)
+    expect(result.result.ok).toBe(true)
+    expect(result.state.nbody).not.toBeNull()
+    expect(result.state.year).toBeLessThan(s.flybys[0].closestYear)
+    expect(result.result.message.ko).toMatch(/근접 통과가 시작되어/)
+  })
+
+  it('유성 폭풍은 극대 앞뒤의 정해진 기간에만 활동도를 키운다', () => {
+    const perseids = METEOR_SHOWERS.find((m) => m.id === 'perseids')!
+    const peak = nextPeakYear(perseids, 2030)
+    const early = startMeteorStorm(
+      initialWorld(peak - 5 / 365.25),
+      'perseids',
+    ).state
+    // 닷새 전에는 평소 활동도 (폭풍이면 수백 배)
+    expect(currentShower(early)?.zhr ?? 0).toBeLessThan(perseids.zhr)
+    const atPeak = { ...early, year: peak }
+    expect(currentShower(atPeak)!.zhr).toBeGreaterThan(perseids.zhr * 100)
   })
 })

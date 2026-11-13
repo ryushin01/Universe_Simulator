@@ -81,6 +81,7 @@ import {
   hasProject,
   habitableZoneNow,
   intruderPositionAu,
+  activeFlyby,
   isRemoved,
   marsAtmosphere,
   stormFrontAu,
@@ -172,6 +173,8 @@ interface BodyVisual {
   clouds?: Mesh
   orbit?: LineLoop
   orbitKey?: string
+  /** 마지막으로 계산한 궤도가 닫힌 궤도인지 (N체 중 이심률 1 이상이면 숨김) */
+  orbitValid?: boolean
 }
 
 function makePlanetMaterial(id: BodyId) {
@@ -841,6 +844,9 @@ export function createSolarScene(): ScaleScene {
   let sunRadius = 2
   let lastOrbitUpdate = -1
   let lastMoonOrbitYear = -1e12
+  // 세계가 바뀌었는지 (처음으로·불러오기면 사건 id가 다시 1부터 시작)
+  let lastNextId = 0
+  let lastWorldYear = -Infinity
   const tmp = new Vector3()
   const quat = new Quaternion()
 
@@ -874,8 +880,8 @@ export function createSolarScene(): ScaleScene {
       const orbit = visual.orbit
       if (!orbit) continue
       const removed = isRemoved(world, visual.id)
-      orbit.visible =
-        show && !removed && (BODIES[visual.id].parent ? true : true)
+      // 궤도를 다시 계산하지 않는 프레임에도 직전 판정(열린 궤도면 숨김)을 유지
+      orbit.visible = show && !removed && visual.orbitValid !== false
       const material = orbit.material as LineBasicMaterial
       material.opacity =
         visual.id === selected ? 0.8 : BODIES[visual.id].parent ? 0.18 : 0.28
@@ -915,10 +921,12 @@ export function createSolarScene(): ScaleScene {
           el = live.e < 1 ? live : null
         }
       }
+      visual.orbitValid = Boolean(el)
       if (!el) {
         orbit.visible = false
         continue
       }
+      orbit.visible = show
       const key = `${mode}|${el.a.toPrecision(5)}|${el.e.toFixed(4)}|${el.i.toFixed(2)}|${el.node.toFixed(1)}|${el.argPeri.toFixed(1)}`
       if (key === visual.orbitKey) continue
       visual.orbitKey = key
@@ -1190,10 +1198,7 @@ export function createSolarScene(): ScaleScene {
     )
 
     // 지나가는 천체
-    const flyby = world.flybys.find(
-      (f) =>
-        f.phase === 'approach' || f.phase === 'nbody' || f.phase === 'leaving',
-    )
+    const flyby = activeFlyby(world)
     if (flyby) {
       const p = intruderPositionAu(world, flyby)
       const r = length(p)
@@ -1472,6 +1477,18 @@ export function createSolarScene(): ScaleScene {
     },
     update(ctx: FrameContext) {
       const world = ctx.world
+      if (world.nextId < lastNextId || world.year < lastWorldYear) {
+        // 이전 세계의 충돌·폭발 기록이 새 세계의 같은 id를 가리지 않도록 비움
+        seenHits.clear()
+        blastSeen.clear()
+        for (const f of flashes) {
+          scene.remove(f.mesh)
+          disposeObject(f.mesh)
+        }
+        flashes.length = 0
+      }
+      lastNextId = world.nextId
+      lastWorldYear = world.year
       mode = ctx.options.distanceMode
       const sun = sunState(world)
       // 태양

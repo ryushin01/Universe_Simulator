@@ -23,7 +23,7 @@ import {
   Texture,
   Vector3,
 } from 'three'
-import type { Camera } from 'three'
+import type { Camera, Object3D } from 'three'
 import {
   equatorialToEcliptic,
   equatorialToGalactic,
@@ -130,8 +130,19 @@ export function makeGlow(
   return mesh
 }
 
-export function faceCamera(object: { quaternion: Quaternion }, camera: Camera) {
-  object.quaternion.copy(camera.quaternion)
+const parentQuaternion = new Quaternion()
+
+/**
+ * 판(빛 번짐·블랙홀 그림)이 카메라를 바라보게 함.
+ * 부모가 돌고 있으면(은하 원반 등) 그 회전을 빼야 화면에서 비스듬히 눕지 않음
+ */
+export function faceCamera(object: Object3D, camera: Camera) {
+  if (object.parent) {
+    object.parent.getWorldQuaternion(parentQuaternion)
+    object.quaternion
+      .copy(parentQuaternion.invert())
+      .multiply(camera.quaternion)
+  } else object.quaternion.copy(camera.quaternion)
 }
 
 /** Space Advisor의 측지선 와이어프레임: 고른 천체를 감싸는 정이십면체 */

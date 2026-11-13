@@ -1,5 +1,12 @@
 import { gaussian, seededRandom } from '@/shared/lib'
 import type { Vec3 } from '@/shared/lib'
+import { NOW_YEAR } from '../solar/sun'
+
+/**
+ * 은하 목록의 위치·속도가 가리키는 시각. 충돌은 언제 이 규모를 처음 열든
+ * 이 시각에서 시작해 시뮬레이션 날짜까지 따라잡습니다.
+ */
+export const CATALOG_EPOCH_YEAR = NOW_YEAR
 
 /**
  * 우리 은하와 안드로메다의 충돌 (제한된 N체, Toomre & Toomre 방식).

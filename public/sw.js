@@ -38,10 +38,18 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // 없는 주소(404.html)나 오류 응답으로 캐시를 덮어쓰지 않음
-          if (response.ok) {
+          // 오프라인용 첫 화면은 정상 HTML 응답으로만 갱신
+          // (없는 주소의 404.html이나, 주소창으로 직접 연 텍스처·스크립트로 덮어쓰지 않음)
+          const html = (response.headers.get('content-type') ?? '').includes('text/html')
+          if (response.ok && html) {
             const copy = response.clone()
-            caches.open(PAGE_CACHE).then((cache) => cache.put(SCOPE, copy))
+            // 응답을 돌려준 뒤에도 캐시 쓰기가 끝날 때까지 서비스 워커를 살려 둠
+            event.waitUntil(
+              caches
+                .open(PAGE_CACHE)
+                .then((cache) => cache.put(SCOPE, copy))
+                .catch(() => {}),
+            )
           }
           return response
         })
@@ -57,7 +65,8 @@ self.addEventListener('fetch', (event) => {
         const cached = await cache.match(request)
         if (cached) return cached
         const response = await fetch(request)
-        if (response.ok) cache.put(request, response.clone())
+        if (response.ok)
+          event.waitUntil(cache.put(request, response.clone()).catch(() => {}))
         return response
       }),
     )

@@ -44,6 +44,6 @@ Solar System Scope 텍스처는 NASA 고도·영상 자료를 바탕으로 만�
 | 초신성 오존    | Gehrels et al. (2003), 감마선 폭발은 Thomas et al. (2005), 킬로노바는 Perkins et al. (2024)                                 |
 | 지구 궤도 이동 | Korycansky, Laughlin & Adams (2001) _Astronomical engineering_                                                              |
 | 은하 충돌      | Toomre & Toomre (1972)의 제한된 N체 방식                                                                                    |
-| 우주 거미줄    | Zel'dovich (1970) 근사, 성장 인자 Carroll, Press & Turner (1992)                                                            |
+| 우주 거미줄    | Zel'dovich (1970) 근사, 성장 인자는 평탄 ΛCDM 적분 해 (Heath 1977)                                                          |
 
 수치는 모두 교육용으로 단순화했습니다. 피해 규모와 구조물 효과는 대략적인 크기만 보여 줍니다.

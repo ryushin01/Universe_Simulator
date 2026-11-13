@@ -1,6 +1,7 @@
 import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { initialWorld } from '../../model/world/engine'
+import { makeStorm } from '../../model/world/factory'
 import { __setWorldForTest, world } from '../../model/world/store'
 import { StormPanel } from './StormPanel'
 
@@ -18,5 +19,18 @@ describe('StormPanel', () => {
     expect(screen.getByRole('status')).toHaveTextContent(
       /약 17시간 뒤 지구에 닿습니다/,
     )
+  })
+
+  it('다른 행성을 겨눠도 원뿔 안에 지구가 들면 지구 도착과 피해를 보여 준다', async () => {
+    render(() => <StormPanel />)
+    const select = screen.getByRole('combobox', { name: '퍼지는 방향' })
+    for (const target of ['mars', 'jupiter', 'saturn'] as const) {
+      await userEvent.selectOptions(select, target)
+      const hitsEarth = makeStorm(world(), 'carrington', target).hits.some(
+        (h) => h.body === 'earth',
+      )
+      if (hitsEarth) expect(screen.getByText('$2T')).toBeInTheDocument()
+      else expect(screen.getByText('지구를 비껴 감')).toBeInTheDocument()
+    }
   })
 })

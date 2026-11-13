@@ -1,4 +1,4 @@
-import { For, createMemo, createSignal } from 'solid-js'
+import { For, createMemo } from 'solid-js'
 import { locale } from '@/shared/i18n'
 import { Button, StatusMessage } from '@/shared/ui'
 import { formatSig } from '@/shared/lib'
@@ -7,12 +7,12 @@ import { world, worldActions } from '../../model/world/store'
 import { currentShower, isRemoved } from '../../model/world/selectors'
 import { formatSimDate } from '../../model/world/text'
 import { viewActions } from '../../model/view'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
 /** 연간 유성우와 유성 폭풍 */
 export function MeteorPanel() {
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const l = () => locale()
   // 날짜가 바뀔 때만 다시 계산
   const day = createMemo(() => Math.floor(world().year * 365.25))
@@ -27,16 +27,30 @@ export function MeteorPanel() {
   const earthGone = () => isRemoved(world(), 'earth')
 
   const goTo = (id: string) => {
-    const entry = peaks().find((p) => p.shower.id === id)
-    if (!entry) return
-    const result = worldActions.jumpTo(entry.peak - 1 / 365.25)
+    const shower = METEOR_SHOWERS.find((m) => m.id === id)
+    if (!shower) return
+    // 목록은 하루 단위로만 다시 계산하므로 지금 시각으로 다시 구함
+    const peak = nextPeakYear(shower, world().year)
+    const eve = peak - 1 / 365.25
+    if (eve <= world().year) {
+      // 이미 극대 전날이 지났으면 건너뛸 필요 없이 재생하면 됨
+      viewActions.selectIn('solar', 'earth')
+      setMessage(() =>
+        t('meteor.soon', {
+          name: pick(shower.name),
+          date: formatSimDate(peak, l()),
+        }),
+      )
+      return
+    }
+    const result = worldActions.jumpTo(eve)
     if (!result.ok) {
-      setMessage(pick(result.message))
+      setMessage(() => pick(result.message))
       return
     }
     worldActions.setSpeed(0)
     viewActions.selectIn('solar', 'earth')
-    setMessage(t('meteor.jumped', { name: pick(entry.shower.name) }))
+    setMessage(() => t('meteor.jumped', { name: pick(shower.name) }))
   }
 
   return (
@@ -97,14 +111,12 @@ export function MeteorPanel() {
                         aria-label={t('meteor.stormNamed', {
                           name: pick(entry.shower.name),
                         })}
-                        onClick={() =>
-                          setMessage(
-                            pick(
-                              worldActions.startMeteorStorm(entry.shower.id)
-                                .message,
-                            ),
+                        onClick={() => {
+                          const result = worldActions.startMeteorStorm(
+                            entry.shower.id,
                           )
-                        }
+                          setMessage(() => pick(result.message))
+                        }}
                       >
                         {t('meteor.storm')}
                       </Button>

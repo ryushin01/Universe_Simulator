@@ -65,6 +65,8 @@ export const MISSIONS: MissionSpec[] = [
       return { ...s, impacts: [...s.impacts, impact], nextId: s.nextId + 1 }
     },
     check: (s) => {
+      // 다른 재해로 지구가 사라지면 소행성이 '빗나감'으로 끝나도 실패
+      if (isRemoved(s, 'earth')) return 'lost'
       const target = s.impacts.find((i) => i.designation === '2026 PDC')
       if (!target) return null
       if (target.status === 'hit') return 'lost'
@@ -72,6 +74,7 @@ export const MISSIONS: MissionSpec[] = [
       return null
     },
     final: (s) =>
+      isRemoved(s, 'earth') ||
       s.impacts.some((i) => i.status === 'hit' && i.target === 'earth')
         ? 'lost'
         : 'won',
@@ -81,9 +84,15 @@ export const MISSIONS: MissionSpec[] = [
           ? l === 'ko'
             ? `성공: 2026 PDC가 지구를 비껴 갔습니다. 쓴 예산 ${formatMoney(s.mission ? s.mission.startBudget - s.budget : 0, l)}.`
             : `Success: 2026 PDC missed Earth. Budget spent: ${formatMoney(s.mission ? s.mission.startBudget - s.budget : 0, l)}.`
-          : l === 'ko'
-            ? '실패: 2026 PDC가 지구에 충돌했습니다.'
-            : 'Failure: 2026 PDC struck Earth.',
+          : s.impacts.some(
+                (i) => i.designation === '2026 PDC' && i.status === 'hit',
+              )
+            ? l === 'ko'
+              ? '실패: 2026 PDC가 지구에 충돌했습니다.'
+              : 'Failure: 2026 PDC struck Earth.'
+            : l === 'ko'
+              ? '실패: 미션 도중 다른 재해로 지구를 잃었습니다.'
+              : 'Failure: Earth was lost to another disaster during the mission.',
       ),
   },
   {

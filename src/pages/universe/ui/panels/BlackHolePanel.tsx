@@ -19,7 +19,7 @@ import {
   intruderPositionAu,
 } from '../../model/world/selectors'
 import { formatDuration } from '../../model/world/text'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import type { MessageKey } from '../i18n'
 import styles from './panels.module.css'
 
@@ -36,7 +36,7 @@ export function BlackHolePanel() {
   const [closest, setClosest] = createSignal(preset0.closestAu)
   const [speed, setSpeed] = createSignal(preset0.speedKms)
   const [inclination, setInclination] = createSignal(preset0.inclination)
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const [error, setError] = createSignal(false)
   const l = () => locale()
   const preset = () => FLYBY_PRESETS.find((p) => p.id === presetId())
@@ -82,12 +82,12 @@ export function BlackHolePanel() {
       name,
     })
     setError(!result.ok)
-    setMessage(pick(result.message))
+    setMessage(() => pick(result.message))
   }
 
   const thought = () => {
     const result = worldActions.setSunBlackHole(!world().sunBlackHole)
-    setMessage(pick(result.message))
+    setMessage(() => pick(result.message))
     setError(false)
   }
 

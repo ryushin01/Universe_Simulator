@@ -16,6 +16,7 @@ import type { PerspectiveCamera } from 'three'
 import { LOCAL_GALAXIES } from '../../../model/local/catalog'
 import {
   advanceCollision,
+  CATALOG_EPOCH_YEAR,
   createCollision,
   separation,
 } from '../../../model/local/collision'
@@ -190,9 +191,11 @@ export function createLocalScene(): ScaleScene {
     },
     update(ctx: FrameContext) {
       const year = ctx.world.year
+      // 목록 시각에서 시작해 아래 advanceCollision이 프레임마다 나눠 따라잡음
+      // (처음 연 시각에 따라 결과가 달라지지 않도록)
       if (!collision || year < collision.year - 1e6) {
         collision = createCollision({
-          year,
+          year: CATALOG_EPOCH_YEAR,
           andromeda: [andromedaKly.x, andromedaKly.y, andromedaKly.z],
           perGalaxy: PER_GALAXY,
           seed: 7,

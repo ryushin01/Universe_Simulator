@@ -621,13 +621,24 @@ export const STAR_BY_ID = Object.fromEntries(
 ) as Record<string, StarInfo>
 
 /** 분광형 첫 글자로 별의 종류 */
+/** 주성(첫 성분) 분광형에서 광도 계급 (Ia·Iab·Ib·I·II·III·IV·V, 없으면 null) */
+export function luminosityClass(spectral: string): string | null {
+  const primary = spectral.split('+')[0].trim()
+  const m = primary.match(
+    /^(?:sd)?[OBAFGKMLTYDW][A-Z]?[\d.-]*\s*(Iab|Ia|Ib|III|II|IV|V|I)?/,
+  )
+  return m?.[1] ?? null
+}
+
+/** 분광형 → 별의 종류 (광도 계급을 먼저 보고, 없거나 V이면 온도형으로 주계열 이름) */
 export function starClassName(spectral: string): Text {
-  const c = spectral.trim()[0]
-  const giant =
-    /I{1,3}\b|Ia|Ib/.test(spectral) && !/V\b/.test(spectral.split('+')[0])
-  if (spectral.startsWith('sd')) return both('준왜성', 'Subdwarf')
-  if (giant) return both('거성·초거성', 'Giant / supergiant')
-  switch (c) {
+  const primary = spectral.split('+')[0].trim()
+  if (primary.startsWith('sd')) return both('준왜성', 'Subdwarf')
+  if (primary.startsWith('D')) return both('백색 왜성', 'White dwarf')
+  const lum = luminosityClass(primary)
+  if (lum === 'IV') return both('준거성', 'Subgiant')
+  if (lum && lum !== 'V') return both('거성·초거성', 'Giant / supergiant')
+  switch (primary[0]) {
     case 'O':
     case 'B':
       return both('푸른 주계열성', 'Blue main-sequence star')

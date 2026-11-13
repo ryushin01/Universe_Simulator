@@ -2,6 +2,7 @@ import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
 import { FLYBY_PRESETS } from '../../model/hazards/flyby'
 import { initialWorld } from '../../model/world/engine'
+import { yearAtSunAge } from '../../model/solar/sun'
 import { __setWorldForTest, worldActions } from '../../model/world/store'
 import { viewActions } from '../../model/view'
 import { Dossier } from './Dossier'
@@ -44,6 +45,15 @@ describe('Dossier', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('10 M☉')).toBeInTheDocument()
     expect(screen.getByText('다가오는 중')).toBeInTheDocument()
+  })
+
+  it('적색 거성이 된 태양은 커진 반지름과 줄어든 질량을 보여 준다', () => {
+    __setWorldForTest(initialWorld(yearAtSunAge(12.167)))
+    viewActions.select('sun', false)
+    render(() => <Dossier />)
+    // 오늘의 69.6만 km보다 수백 배 큼 (약 1.8억 km)
+    expect(screen.getByText(/1\.78억 km/)).toBeInTheDocument()
+    expect(screen.queryByText('69.6만 km')).not.toBeInTheDocument()
   })
 
   it('별 규모에서는 분광형과 폭발 버튼을 보여 준다', () => {

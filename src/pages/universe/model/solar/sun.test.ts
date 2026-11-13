@@ -44,6 +44,11 @@ describe('태양 진화', () => {
   })
 
   it('백색 왜성은 지구만 하고 시간이 지날수록 어두워진다', () => {
+    // 진화표가 끝나는 곳에서 냉각 곡선으로 끊김 없이 이어짐
+    const before = sunAt(12.367)
+    const after = sunAt(12.367001)
+    expect(after.luminosity / before.luminosity).toBeGreaterThan(0.99)
+    expect(after.luminosity / before.luminosity).toBeLessThan(1.01)
     const young = sunAt(13)
     const old = sunAt(18)
     expect(young.radius).toBeCloseTo(0.0125, 4)

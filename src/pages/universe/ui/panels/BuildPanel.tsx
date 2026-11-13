@@ -1,5 +1,6 @@
 import { For, Show, createSignal } from 'solid-js'
 import { locale } from '@/shared/i18n'
+import type { Text } from '@/shared/i18n'
 import { Button, StatusMessage } from '@/shared/ui'
 import { formatMoney, formatNumber, formatPercent } from '@/shared/lib'
 import {
@@ -16,7 +17,7 @@ import {
   projectProgress,
 } from '../../model/world/selectors'
 import { formatPeople } from '../../model/world/text'
-import { pick, t } from '../i18n'
+import { createMessage, pick, t } from '../i18n'
 import styles from './panels.module.css'
 
 const CATEGORIES: ProjectCategory[] = ['defense', 'habitat', 'climate', 'mega']
@@ -24,7 +25,7 @@ const CATEGORIES: ProjectCategory[] = ['defense', 'habitat', 'climate', 'mega']
 function ProjectCard(props: {
   kind: ProjectKind
   instant: boolean
-  onResult: (message: string, error: boolean) => void
+  onResult: (message: Text, error: boolean) => void
 }) {
   const l = () => locale()
   const spec = () => PROJECT_BY_KIND[props.kind]
@@ -32,7 +33,7 @@ function ProjectCard(props: {
   const check = () => canBuild(world(), props.kind)
   const build = () => {
     const result = worldActions.build(props.kind, props.instant)
-    props.onResult(pick(result.message), !result.ok)
+    props.onResult(result.message, !result.ok)
   }
   return (
     <li class={styles.card}>
@@ -104,11 +105,11 @@ function ProjectCard(props: {
 /** 거대 우주 구조물과 시설 */
 export function BuildPanel() {
   const [instant, setInstant] = createSignal(false)
-  const [message, setMessage] = createSignal('')
+  const [message, setMessage] = createMessage()
   const [error, setError] = createSignal(false)
   const inMission = () => world().mission?.status === 'running'
-  const onResult = (text: string, failed: boolean) => {
-    setMessage(text)
+  const onResult = (text: Text, failed: boolean) => {
+    setMessage(() => pick(text))
     setError(failed)
   }
   return (

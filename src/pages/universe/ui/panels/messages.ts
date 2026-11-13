@@ -154,6 +154,10 @@ export const PANEL_MESSAGES = {
     '지금은 큰 유성우가 없습니다.',
     'No major shower right now.',
   ],
+  'meteor.soon': [
+    '{name} 극대({date})까지 하루도 남지 않았습니다. 시간을 재생해 지켜보세요.',
+    'The {name} peak ({date}) is less than a day away. Press play to watch it.',
+  ],
   'meteor.jumped': [
     '{name} 극대 하루 전으로 이동했습니다. 1시간/초 속도로 지구를 따라갑니다.',
     'Moved to the day before the {name} peak; following Earth at 1 hour per second.',

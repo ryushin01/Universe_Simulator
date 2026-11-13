@@ -1,5 +1,6 @@
 import { render, screen } from '@solidjs/testing-library'
 import userEvent from '@testing-library/user-event'
+import { setLocale } from '@/shared/i18n'
 import { initialWorld } from '../../model/world/engine'
 import { __setWorldForTest, world } from '../../model/world/store'
 import { BlastPanel } from './BlastPanel'
@@ -23,5 +24,17 @@ describe('BlastPanel', () => {
     )
     expect(screen.getByText('가정')).toBeInTheDocument()
     expect(screen.getByText('잔해 도착')).toBeInTheDocument()
+  })
+
+  it('결과 안내문은 언어를 바꾸면 그 언어로 다시 나온다', async () => {
+    render(() => <BlastPanel />)
+    await userEvent.click(screen.getByRole('button', { name: '폭발시키기' }))
+    expect(screen.getByRole('status')).toHaveTextContent(/베텔게우스/)
+    setLocale('en')
+    try {
+      expect(screen.getByRole('status')).toHaveTextContent(/Betelgeuse/)
+    } finally {
+      setLocale('ko')
+    }
   })
 })
