@@ -2,3 +2,9 @@ allowBuilds:
   esbuild: true
 # 루트에서 pnpm add를 할 때 -w 없이도 되게 합니다(.npmrc에 두면 npm이 모르는 설정이라 경고).
 ignoreWorkspaceRootCheck: true
+# 개발 도구의 간접 의존성 보안 패치 (Dependabot 알림). 사이트 묶음에는 들어가지 않음
+#  - basic-ftp: Lighthouse CI → proxy-agent → get-uri (프록시로 FTP를 받을 때만 쓰임)
+#  - minimatch 7~10: ESLint 설정 처리 (@eslint/config-array)
+overrides:
+  basic-ftp: ^6.2.4
+  'minimatch@>=7 <11.0.1': ^11.0.1
