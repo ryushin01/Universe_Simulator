@@ -38,6 +38,8 @@ const STEP = Math.PI / 12
 const MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 /** 이만큼 덜 움직이고 손을 떼면 끌기가 아니라 고르기 (CSS 픽셀) */
 const CLICK_SLOP = 6
+/** 워커가 이 시간 안에 첫 장면을 그리지 못하면 메인 스레드로 바꿈 (OffscreenCanvas가 불안정한 브라우저) */
+const WORKER_READY_TIMEOUT_MS = 20_000
 
 type CameraAction = 'left' | 'right' | 'up' | 'down' | 'in' | 'out'
 
@@ -126,6 +128,8 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
 
     // 캔버스: 워커로 넘기면 메인 스레드에서는 다시 쓸 수 없으므로 바꿀 때 새로 만듦
     const pointers = new Map<number, [number, number]>()
+    /** 두 손가락 이상으로 확대·회전한 제스처 (손을 모두 뗄 때까지 고르지 않음) */
+    let multiPointer = false
     const createCanvas = () => {
       const canvas = document.createElement('canvas')
       canvas.setAttribute('aria-hidden', 'true')
@@ -135,6 +139,7 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
       }
       canvas.addEventListener('pointerdown', (event) => {
         pointers.set(event.pointerId, [event.clientX, event.clientY])
+        if (pointers.size > 1) multiPointer = true
         if (client?.mode === 'worker') {
           // 캔버스 밖으로 끌어도 계속 받도록 (워커의 대리 요소는 캡처를 못 함)
           canvas.setPointerCapture(event.pointerId)
@@ -150,10 +155,14 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
         if (!start) return
         pointers.delete(event.pointerId)
         forward(event)
-        if (client?.mode === 'worker' && pointers.size === 0)
-          canvas.style.cursor = ''
-        // 거의 움직이지 않고 떼면 그 자리의 천체를 고름
+        const gesture = multiPointer
+        if (pointers.size === 0) {
+          multiPointer = false
+          if (client?.mode === 'worker') canvas.style.cursor = ''
+        }
+        // 한 손가락(마우스)으로 거의 움직이지 않고 떼면 그 자리의 천체를 고름
         if (
+          gesture ||
           event.type !== 'pointerup' ||
           Math.hypot(event.clientX - start[0], event.clientY - start[1]) >
             CLICK_SLOP
@@ -162,8 +171,10 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
         const rect = canvas.getBoundingClientRect()
         const x = ((event.clientX - rect.left) / rect.width) * 2 - 1
         const y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+        // 워커의 답이 오기 전에 규모를 바꿨으면 이전 규모의 천체이므로 버림
+        const requested = scale()
         void client?.pick(x, y).then((id) => {
-          if (id) viewActions.select(id)
+          if (id && scale() === requested) viewActions.select(id)
         })
       }
       canvas.addEventListener('pointerup', release)
@@ -205,10 +216,15 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
       await afterPaint()
       if (disposed) return
       try {
-        client = await createMainClient(canvas, measure(), smallTextures, {
-          ...callbacks,
-          onError: () => setStatus('error'),
-        })
+        const created = await createMainClient(
+          canvas,
+          measure(),
+          smallTextures,
+          { ...callbacks, onError: () => setStatus('error') },
+        )
+        // 엔진 묶음을 받는 사이에 화면을 떠났으면 바로 정리
+        if (disposed) created.dispose()
+        else client = created
       } catch {
         setStatus('error')
       }
@@ -221,9 +237,25 @@ export function Viewport(props: { hintId: string; controls: boolean }) {
         void startMain()
       }
     } else void startMain()
+    const watchdog = setTimeout(() => {
+      if (client?.mode === 'worker' && status() === 'loading') void startMain()
+    }, WORKER_READY_TIMEOUT_MS)
+    onCleanup(() => clearTimeout(watchdog))
 
     const observer = new ResizeObserver(() => client?.resize(measure()))
     observer.observe(container)
+
+    // 워커의 OrbitControls는 Ctrl 키를 눌렀는지로 휠과 트랙패드 핀치를 구분하므로 알려 줌
+    const forwardControl = (event: KeyboardEvent) => {
+      if (event.key === 'Control' && client?.mode === 'worker')
+        client.forward({ type: event.type, key: event.key })
+    }
+    window.addEventListener('keydown', forwardControl, true)
+    window.addEventListener('keyup', forwardControl, true)
+    onCleanup(() => {
+      window.removeEventListener('keydown', forwardControl, true)
+      window.removeEventListener('keyup', forwardControl, true)
+    })
 
     // 화면 상태가 바뀐 프레임에만 엔진에 넘김 (시뮬레이션 상태는 사건 기록을 빼고)
     const push = () => {

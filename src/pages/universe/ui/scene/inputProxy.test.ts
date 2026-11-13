@@ -44,4 +44,14 @@ describe('InputProxy', () => {
     })
     expect(() => proxy.dispatch({ type: 'wheel', deltaY: 100 })).not.toThrow()
   })
+
+  it('Ctrl 키 눌림을 문서(getRootNode)로 받아 휠과 핀치를 구분할 수 있다', () => {
+    const proxy = new InputProxy()
+    const keys: string[] = []
+    proxy
+      .getRootNode()
+      .addEventListener('keydown', (e) => keys.push(e.key ?? ''))
+    proxy.dispatch({ type: 'keydown', key: 'Control' })
+    expect(keys).toEqual(['Control'])
+  })
 })

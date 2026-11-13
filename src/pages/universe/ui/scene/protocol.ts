@@ -29,6 +29,8 @@ export interface ForwardedEvent {
   deltaY?: number
   deltaZ?: number
   deltaMode?: number
+  /** 키보드: OrbitControls는 Ctrl 키 눌림으로 휠과 트랙패드 핀치를 구분함 */
+  key?: string
 }
 
 export interface Viewport {
