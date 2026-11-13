@@ -25,7 +25,6 @@ import {
   growth,
   scaleFactor,
 } from '../../../model/cosmic/cosmology'
-import { cosmicAge } from '../../../model/view'
 import { makeCosmicWeb } from '../../../lib/cosmicWeb'
 import { NOISE, pointsVertex, starPointsFragment } from '../../../lib/shaders'
 import {
@@ -294,7 +293,7 @@ export function createCosmicScene(): ScaleScene {
       return (hit?.object.userData.id as string | undefined) ?? null
     },
     update(ctx: FrameContext) {
-      const age = cosmicAge() ?? cosmicAgeAtYear(ctx.world.year)
+      const age = ctx.cosmicAge ?? cosmicAgeAtYear(ctx.world.year)
       const D = growth(scaleFactor(Math.max(age, 0.05)))
       if (Math.abs(D - lastGrowth) > 0.002) {
         lastGrowth = D
