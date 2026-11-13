@@ -1,0 +1,25 @@
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.select {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background-color: var(--panel-solid);
+  color: var(--ice);
+  font-size: 0.875rem;
+
+  &:hover {
+    border-color: var(--accent-strong);
+  }
+}
+
+.description {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--muted);
+}

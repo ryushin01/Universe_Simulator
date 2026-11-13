@@ -1,0 +1,49 @@
+.list {
+  display: grid;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  position: relative;
+  min-height: 2.75rem;
+  padding: 0.25rem 0.35rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  transition: color 0.2s;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.5rem;
+    bottom: -1px;
+    height: 2px;
+    background-color: transparent;
+    transition: background-color 0.2s;
+  }
+
+  &:hover {
+    color: var(--ice);
+  }
+}
+
+.selected {
+  color: var(--ice);
+
+  &::after {
+    background-color: var(--accent);
+  }
+}
+
+.panel {
+  padding-top: 1rem;
+
+  &:focus-visible {
+    outline-offset: 4px;
+  }
+}
