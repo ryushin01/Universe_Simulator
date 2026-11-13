@@ -130,6 +130,18 @@ export function makeGlow(
   return mesh
 }
 
+/**
+ * 장면이 기억하는 사건(섬광·폭발)의 열쇠. 처음으로 돌리거나 저장을 불러오면 사건 id가
+ * 다시 1부터 시작하므로, 일어난 시각까지 묶어 같은 id의 다른 사건과 구분합니다.
+ */
+export const blastKey = (b: { id: number; year: number; sourceId: string }) =>
+  `${b.id}:${b.year}:${b.sourceId}`
+export const impactKey = (im: {
+  id: number
+  createdYear: number
+  designation: string
+}) => `${im.id}:${im.createdYear}:${im.designation}`
+
 const parentQuaternion = new Quaternion()
 
 /**

@@ -1,5 +1,5 @@
 import { initialWorld } from './engine'
-import { build, setSunBlackHole } from './actions'
+import { build, setSunBlackHole, startMeteorStorm } from './actions'
 import {
   decodeSnapshot,
   encodeSnapshot,
@@ -55,6 +55,17 @@ describe('공유 스냅숏', () => {
     expect(back.earth.coolingC).toBe(-8.5)
     expect(back.losses).toBe(1234)
     expect(back.colonyHealth['moon-base']).toBe(0.4)
+  })
+
+  it('예약한 유성 폭풍도 저장한다', () => {
+    const state = startMeteorStorm(initialWorld(2030.2), 'perseids').state
+    const back = fromSnapshot(
+      decodeSnapshot(encodeSnapshot(toSnapshot(state)))!,
+    )
+    expect(back.meteorStorm).toEqual(state.meteorStorm)
+    expect(
+      validateSnapshot({ ...toSnapshot(state), meteor: ['x', 1, 2] }),
+    ).toBeNull()
   })
 
   it('예전 형식(지구 값 6개, 피해 없음)도 읽는다', () => {

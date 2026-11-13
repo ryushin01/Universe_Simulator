@@ -20,6 +20,7 @@ import { destinationsOf } from '../../../model/objects'
 import { blackbodyColor } from '../../../model/solar/sun'
 import {
   disposeObject,
+  blastKey,
   faceCamera,
   makeGlow,
   makeSelectionShell,
@@ -174,7 +175,7 @@ export function createStarsScene(): ScaleScene {
 
   const shell = makeSelectionShell()
   scene.add(shell)
-  const flareStart = new Map<number, number>()
+  const flareStart = new Map<string, number>()
 
   const target = (id: string): Target | null => {
     if (id === 'sun') return { position: new Vector3(0, 0, 0), radius: 2.5 }
@@ -208,8 +209,9 @@ export function createStarsScene(): ScaleScene {
     },
     update(ctx: FrameContext) {
       // 세계가 바뀌어 사라진 폭발의 시작 시각은 지움 (새 폭발이 같은 id를 받을 수 있음)
-      for (const id of flareStart.keys())
-        if (!ctx.world.blasts.some((b) => b.id === id)) flareStart.delete(id)
+      const live = new Set(ctx.world.blasts.map(blastKey))
+      for (const key of flareStart.keys())
+        if (!live.has(key)) flareStart.delete(key)
       faceCamera(sun, ctx.camera)
       for (const v of visuals.values()) {
         faceCamera(v.glow, ctx.camera)
@@ -219,8 +221,9 @@ export function createStarsScene(): ScaleScene {
           : undefined
         const u = (v.glow.material as ShaderMaterial).uniforms
         if (blast) {
-          if (!flareStart.has(blast.id)) flareStart.set(blast.id, ctx.elapsed)
-          const t = ctx.elapsed - flareStart.get(blast.id)!
+          const key = blastKey(blast)
+          if (!flareStart.has(key)) flareStart.set(key, ctx.elapsed)
+          const t = ctx.elapsed - flareStart.get(key)!
           const flare = Math.exp(-t / 3) * 6 + 1.2
           v.glow.scale.setScalar(v.size * 4 * flare)
           u.uIntensity.value = 1.4

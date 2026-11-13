@@ -48,6 +48,8 @@ import type { MissionId, WorldState } from './types'
 export interface ActionResult {
   ok: boolean
   message: Text
+  /** 시간 건너뛰기가 목표 시각에 닿기 전에 멈춤 (근접 통과 시작) */
+  interrupted?: boolean
 }
 
 export interface Outcome {
@@ -105,16 +107,20 @@ export function jumpTo(state: WorldState, year: number): Outcome {
       'You cannot go back in time.',
     )
   const next = advanceTo(state, target)
-  // 건너뛰는 도중 근접 통과가 시작되면 그 시점에서 멈춤
+  // 건너뛰는 도중 근접 통과가 시작되면 그 시점에서 멈춤 (부른 쪽이 도착으로 여기지 않게 표시)
   if (next.nbody && next.year < target)
-    return done(
-      { ...next, orbitYear: next.year },
-      compose((l) =>
-        l === 'ko'
-          ? `${formatSimDate(next.year, l)}에 근접 통과가 시작되어 그 시점에서 멈췄습니다. N체 계산이 끝난 뒤 다시 건너뛰세요.`
-          : `A close encounter began on ${formatSimDate(next.year, l)}, so the jump stopped there. Skip again once the N-body run ends.`,
-      ),
-    )
+    return {
+      state: { ...next, orbitYear: next.year },
+      result: {
+        ok: true,
+        interrupted: true,
+        message: compose((l) =>
+          l === 'ko'
+            ? `${formatSimDate(next.year, l)}에 근접 통과가 시작되어 그 시점에서 멈췄습니다. N체 계산이 끝난 뒤 다시 건너뛰세요.`
+            : `A close encounter began on ${formatSimDate(next.year, l)}, so the jump stopped there. Skip again once the N-body run ends.`,
+        ),
+      },
+    }
   return done(
     { ...next, orbitYear: next.year },
     compose((l) =>

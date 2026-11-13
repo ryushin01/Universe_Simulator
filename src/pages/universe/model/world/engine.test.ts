@@ -202,6 +202,8 @@ describe('블랙홀', () => {
     const far = s.year + 5e7
     const result = jumpTo(s, far)
     expect(result.result.ok).toBe(true)
+    // 부른 쪽이 도착으로 여기지 않도록 중단을 표시
+    expect(result.result.interrupted).toBe(true)
     expect(result.state.nbody).not.toBeNull()
     expect(result.state.year).toBeLessThan(s.flybys[0].closestYear)
     expect(result.result.message.ko).toMatch(/근접 통과가 시작되어/)

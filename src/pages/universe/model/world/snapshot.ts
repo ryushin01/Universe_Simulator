@@ -2,6 +2,7 @@ import { isBodyId } from '../solar/bodies'
 import type { BodyId } from '../solar/bodies'
 import { MAX_YEAR } from '../solar/sun'
 import { PROJECT_BY_KIND } from '../projects/catalog'
+import { METEOR_SHOWERS } from '../hazards/meteors'
 import type { ProjectKind } from '../projects/catalog'
 import { SPEEDS } from './time'
 import { initialWorld } from './engine'
@@ -27,6 +28,8 @@ export interface Snapshot {
   losses?: number
   /** 기지별 생존 비율 */
   colonies?: Partial<Record<ProjectKind, number>>
+  /** 예약한 유성 폭풍 [유성우, 시작, 끝] */
+  meteor?: [string, number, number]
   structures: Array<[ProjectKind, number, number]>
   overrides: Partial<
     Record<
@@ -81,6 +84,15 @@ export function toSnapshot(state: WorldState): Snapshot {
     budget: state.budget,
     losses: state.losses,
     colonies: state.colonyHealth,
+    ...(state.meteorStorm && state.meteorStorm.untilYear > state.year
+      ? {
+          meteor: [
+            state.meteorStorm.showerId,
+            state.meteorStorm.fromYear,
+            state.meteorStorm.untilYear,
+          ] as [string, number, number],
+        }
+      : {}),
     structures: state.structures.map((s) => [
       s.kind,
       s.startYear,
@@ -115,6 +127,16 @@ export function validateSnapshot(raw: unknown): Snapshot | null {
     return null
   if (!finite(s.budget, -1e15, 1e18)) return null
   if (s.losses !== undefined && !finite(s.losses, 0, 1e18)) return null
+  if (s.meteor !== undefined) {
+    if (!Array.isArray(s.meteor) || s.meteor.length !== 3) return null
+    const [shower, from, until] = s.meteor
+    if (
+      !METEOR_SHOWERS.some((m) => m.id === shower) ||
+      !finite(from, 1900, MAX_YEAR) ||
+      !finite(until, from as number, MAX_YEAR)
+    )
+      return null
+  }
   if (s.colonies !== undefined) {
     if (!s.colonies || typeof s.colonies !== 'object') return null
     for (const [kind, health] of Object.entries(s.colonies))
@@ -210,6 +232,13 @@ export function fromSnapshot(snapshot: Snapshot): WorldState {
     budget: snapshot.budget,
     losses: snapshot.losses ?? 0,
     colonyHealth: { ...snapshot.colonies },
+    meteorStorm: snapshot.meteor
+      ? {
+          showerId: snapshot.meteor[0],
+          fromYear: snapshot.meteor[1],
+          untilYear: snapshot.meteor[2],
+        }
+      : null,
     structures: snapshot.structures.map(
       ([kind, startYear, completeYear], i) => ({
         id: i + 1,

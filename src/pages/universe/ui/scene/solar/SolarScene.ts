@@ -108,7 +108,9 @@ import {
 import {
   axesQuaternion,
   disposeObject,
+  blastKey,
   faceCamera,
+  impactKey,
   loadTexture,
   makeGlow,
   makeSelectionShell,
@@ -542,7 +544,7 @@ export function createSolarScene(): ScaleScene {
     dir: Vector3
     size: number
   }> = []
-  const seenHits = new Set<number>()
+  const seenHits = new Set<string>()
   // 폭풍 등급마다 퍼지는 원뿔 각이 달라 구의 일부(캡)를 각도별로 한 번만 만듦
   const stormCaps = new Map<number, SphereGeometry>()
   const stormCap = (halfAngle: number) => {
@@ -570,7 +572,7 @@ export function createSolarScene(): ScaleScene {
     scene.add(glow, remnant)
     return { glow, remnant }
   })
-  const blastSeen = new Map<number, number>()
+  const blastSeen = new Map<string, number>()
 
   const intruder = new Group()
   const intruderStar = new Mesh(
@@ -886,7 +888,8 @@ export function createSolarScene(): ScaleScene {
       material.opacity =
         visual.id === selected ? 0.8 : BODIES[visual.id].parent ? 0.18 : 0.28
       material.color.set(visual.id === selected ? '#a9bdff' : '#7c9cff')
-      if (!orbit.visible || removed) continue
+      // 열린 궤도로 숨긴 것도 다시 계산할 수 있게 보기 설정과 사라짐만 보고 건너뜀
+      if (!show || removed) continue
       if (BODIES[visual.id].parent) {
         if (
           Math.abs(world.orbitYear - lastMoonOrbitYear) < 0.02 &&
@@ -1079,8 +1082,8 @@ export function createSolarScene(): ScaleScene {
     })
     // 충돌 섬광
     for (const im of world.impacts) {
-      if (im.status !== 'hit' || seenHits.has(im.id)) continue
-      seenHits.add(im.id)
+      if (im.status !== 'hit' || seenHits.has(impactKey(im))) continue
+      seenHits.add(impactKey(im))
       if (ctx.reducedMotion) continue
       const mesh = makeGlow('#fff2c4', 1, 1.6, 1)
       scene.add(mesh)
@@ -1150,8 +1153,8 @@ export function createSolarScene(): ScaleScene {
         slot.remnant.visible = false
         return
       }
-      if (!blastSeen.has(b.id)) blastSeen.set(b.id, ctx.elapsed)
-      const realAge = ctx.elapsed - blastSeen.get(b.id)!
+      if (!blastSeen.has(blastKey(b))) blastSeen.set(blastKey(b), ctx.elapsed)
+      const realAge = ctx.elapsed - blastSeen.get(blastKey(b))!
       const simAge = world.year - b.year
       const dir = raDecToScene(b.ra, b.dec)
       // 광도 곡선: 2주 동안 밝아지고 1년에 걸쳐 어두워짐 (빠른 재생에서도 몇 초는 보이게)
@@ -1182,7 +1185,7 @@ export function createSolarScene(): ScaleScene {
       }
     })
     const flash = blasts.reduce((max, b) => {
-      const realAge = ctx.elapsed - (blastSeen.get(b.id) ?? -99)
+      const realAge = ctx.elapsed - (blastSeen.get(blastKey(b)) ?? -99)
       const strong =
         b.ozoneLoss > 0.05 ||
         (b.magnitude !== null && b.magnitude < -12) ||

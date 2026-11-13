@@ -33,7 +33,8 @@ export function MeteorPanel() {
     const peak = nextPeakYear(shower, world().year)
     const eve = peak - 1 / 365.25
     if (eve <= world().year) {
-      // 이미 극대 전날이 지났으면 건너뛸 필요 없이 재생하면 됨
+      // 이미 극대 전날이 지났으면 건너뛸 필요 없이 재생하면 됨 (빠른 속도면 극대를 놓치므로 느리게)
+      worldActions.setSpeed(0)
       viewActions.selectIn('solar', 'earth')
       setMessage(() =>
         t('meteor.soon', {
@@ -44,7 +45,8 @@ export function MeteorPanel() {
       return
     }
     const result = worldActions.jumpTo(eve)
-    if (!result.ok) {
+    // 실패했거나 근접 통과로 도중에 멈췄으면 그 이유를 그대로 알림
+    if (!result.ok || result.interrupted) {
       setMessage(() => pick(result.message))
       return
     }
