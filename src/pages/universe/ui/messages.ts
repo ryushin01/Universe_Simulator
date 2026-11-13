@@ -19,8 +19,8 @@ export const MESSAGES = {
   'page.mobileNav': ['화면 이동', 'Jump to'],
   'page.destinations': ['목적지', 'Destinations'],
   'page.credits': [
-    '텍스처·궤도 자료·글꼴 출처 (README)',
-    'Texture, orbital data and font credits (README)',
+    '텍스처·궤도 자료·글꼴 출처 (README, 새 탭)',
+    'Texture, orbital data and font credits (README, new tab)',
   ],
   // 규모
   'scale.legend': ['보는 규모', 'Scale'],

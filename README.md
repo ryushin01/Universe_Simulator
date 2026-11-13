@@ -106,14 +106,14 @@ src/
 
 ## 출처
 
-| 자료                                                           | 저작자                           | 사용 허락      | 원본                                                                                                  |
-| -------------------------------------------------------------- | -------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------- |
-| 행성 텍스처 (수성·금성·달·화성·목성·토성과 고리·천왕성·해왕성) | Solar System Scope               | CC BY 4.0      | [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)                             |
-| 지구 텍스처 (색·밤 불빛·구름)                                  | three.js authors                 | MIT            | [three.js 예제 텍스처 (r160)](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets) |
-| 행성 근사 궤도 요소                                            | E. M. Standish, NASA JPL         | 공개 과학 자료 | [Approximate Positions of the Planets](https://ssd.jpl.nasa.gov/planets/approx_pos.html)              |
-| 소천체 궤도 요소 (세레스·아포피스·핼리 혜성·유성우 모천체)     | NASA JPL Solar System Dynamics   | 공개 과학 자료 | [Small-Body Database API](https://ssd-api.jpl.nasa.gov/doc/sbdb.html)                                 |
-| Jost 글꼴 (영문 제목)                                          | Owen Earl (indestructible type*) | SIL OFL 1.1    | [Jost](https://github.com/indestructible-type/Jost) · [Fontsource](https://fontsource.org/fonts/jost) |
-| three.js (3D)                                                  | three.js authors                 | MIT            | [three.js](https://github.com/mrdoob/three.js)                                                        |
-| SolidJS (화면)                                                 | Ryan Carniato                    | MIT            | [solid](https://github.com/solidjs/solid)                                                             |
+| 자료                                                           | 저작자                           | 사용 허락                                                 | 원본                                                                                                  |
+| -------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 행성 텍스처 (수성·금성·달·화성·목성·토성과 고리·천왕성·해왕성) | Solar System Scope               | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | [Solar System Scope Textures](https://www.solarsystemscope.com/textures/)                             |
+| 지구 텍스처 (색·밤 불빛·구름)                                  | three.js authors                 | MIT                                                       | [three.js 예제 텍스처 (r160)](https://github.com/mrdoob/three.js/tree/r160/examples/textures/planets) |
+| 행성 근사 궤도 요소                                            | E. M. Standish, NASA JPL         | 공개 과학 자료                                            | [Approximate Positions of the Planets](https://ssd.jpl.nasa.gov/planets/approx_pos.html)              |
+| 소천체 궤도 요소 (세레스·아포피스·핼리 혜성·유성우 모천체)     | NASA JPL Solar System Dynamics   | 공개 과학 자료                                            | [Small-Body Database API](https://ssd-api.jpl.nasa.gov/doc/sbdb.html)                                 |
+| Jost 글꼴 (영문 제목)                                          | Owen Earl (indestructible type*) | SIL OFL 1.1                                               | [Jost](https://github.com/indestructible-type/Jost) · [Fontsource](https://fontsource.org/fonts/jost) |
+| three.js (3D)                                                  | three.js authors                 | MIT                                                       | [three.js](https://github.com/mrdoob/three.js)                                                        |
+| SolidJS (화면)                                                 | Ryan Carniato                    | MIT                                                       | [solid](https://github.com/solidjs/solid)                                                             |
 
 자전축·천체 목록·모델 근거 같은 자세한 자료 출처는 [데이터 출처](docs/data-sources.md)에 있습니다. 아이콘, 셰이더로 그린 태양·블랙홀·은하·우주 거미줄, 화면 사진은 이 프로젝트에서 직접 만들었습니다.
