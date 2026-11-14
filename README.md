@@ -1,7 +1,7 @@
 # UNIVERSE SIMULATOR - 우주 환경·재해 대응 시뮬레이터
 
 [![CI](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.2.1-7c9cff)
+![version](https://img.shields.io/badge/version-0.2.2-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화를 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [EARTH_PLAN](https://github.com/ryushin01/EARTH_PLAN)의 우주판입니다.
 
