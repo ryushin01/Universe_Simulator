@@ -1,13 +1,13 @@
 # UNIVERSE SIMULATOR - 우주 환경·재해 대응 시뮬레이터
 
 [![CI](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/ryushin01/Universe_Simulator/actions/workflows/ci.yml)
-![version](https://img.shields.io/badge/version-0.2.0-7c9cff)
+![version](https://img.shields.io/badge/version-0.2.1-7c9cff)
 
 태양계에서 우주 거대 구조까지 오가며 소행성 충돌, 태양 폭풍, 초신성·감마선 폭발, 블랙홀 근접 통과, 유성우, 태양의 노화를 일으키고 다이슨 스웜·링월드·궤도 이동 같은 우주 구조물로 대응해 보는 3D 우주 시뮬레이터입니다. [EARTH_PLAN](https://github.com/ryushin01/EARTH_PLAN)의 우주판입니다.
 
 **[데모 바로 보기](https://ryushin01.github.io/Universe_Simulator/)** · [Storybook](https://ryushin01.github.io/Universe_Simulator/storybook/)
 
-> **프로젝트 상태:** 0.2.0까지 만든 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
+> **프로젝트 상태:** 0.2.1까지 만든 **개인 프로젝트**입니다. 행성 위치는 NASA JPL 궤도 요소로 계산하지만, 태양 진화·기후·피해 규모·우주 구조물은 단순화한 모델이라 교육·탐색용으로만 쓰세요. 디자인은 [Space Advisor](https://www.cssdesignawards.com/sites/space-advisor/28977/)(Akufen)를 참고했습니다.
 
 ## 화면
 
