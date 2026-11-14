@@ -3,10 +3,16 @@
   gap: 0.4rem;
 }
 
+/* 화살표(.chevron)는 글자 왼쪽 간격(테두리 1px + 안쪽 여백 0.75rem)만큼 오른쪽 끝에서 띄우고, 오른쪽 안쪽 여백은 화살표 자리만큼 넓힙니다. */
+.control {
+  position: relative;
+}
+
 .select {
   width: 100%;
   min-height: 2.75rem;
-  padding: 0 0.75rem;
+  padding: 0 calc(0.75rem + 12px + 0.5rem) 0 0.75rem;
+  appearance: none;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background-color: var(--panel-solid);
@@ -16,6 +22,17 @@
   &:hover {
     border-color: var(--accent-strong);
   }
+}
+
+.chevron {
+  position: absolute;
+  top: 50%;
+  right: calc(1px + 0.75rem);
+  width: 12px;
+  height: 8px;
+  color: var(--ice);
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .description {
